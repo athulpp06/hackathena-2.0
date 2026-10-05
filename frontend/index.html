@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeakedIn — AI Recruitment Fraud Detector</title>
+  <meta name="description" content="Paste any job posting and instantly detect scams with AI-powered analysis. Risk scores, red flags, and explainable results." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Background particles -->
+  <div class="bg-grid"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-icon">🛡️</span>
+      <span class="logo-text">Leaked<span class="logo-accent">In</span></span>
+    </div>
+    <div class="header-tagline">AI-Powered Recruitment Security</div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">🚨 Hackathena 2.0 &nbsp;|&nbsp; Day 1: Job Posting Scanner</div>
+    <h1 class="hero-title">Is That Job Real<br /><span class="gradient-text">or a Scam?</span></h1>
+    <p class="hero-sub">Paste any job offer — from WhatsApp, email, LinkedIn, or Naukri. Our AI analyses it in seconds and shows you every red flag.</p>
+  </section>
+
+  <!-- Main analyzer card -->
+  <main class="analyzer-wrapper">
+    <div class="analyzer-card">
+
+      <!-- Input Section -->
+      <div class="input-section">
+        <div class="input-header">
+          <label class="input-label" for="job-text">Paste Job Posting Here</label>
+          <div class="sample-buttons">
+            <button class="btn-sample btn-sample-scam" id="load-scam">⚠️ Load Scam Example</button>
+            <button class="btn-sample btn-sample-real" id="load-real">✅ Load Real Job</button>
+          </div>
+        </div>
+        <textarea
+          id="job-text"
+          class="job-textarea"
+          placeholder="Paste the full job description, including title, company, salary, requirements, and contact details...&#10;&#10;Example: 'URGENT HIRING: Earn Rs 45000/week from home. No experience required. WhatsApp us now...'"
+          rows="10"
+          spellcheck="false"
+        ></textarea>
+
+        <!-- Optional fields -->
+        <div class="optional-fields">
+          <div class="field-group">
+            <label class="field-label" for="company-name">Company Name (optional)</label>
+            <input type="text" id="company-name" class="field-input" placeholder="e.g. TCS, Google, Infosys" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="contact-email">Contact Email (optional)</label>
+            <input type="text" id="contact-email" class="field-input" placeholder="e.g. hr@company.com" />
+          </div>
+        </div>
+
+        <button class="btn-analyze" id="analyze-btn">
+          <span id="btn-label">🔍 Analyze Job Posting</span>
+          <span id="btn-spinner" class="btn-spinner hidden"></span>
+        </button>
+      </div>
+
+      <!-- Results Section (hidden until analysis) -->
+      <div class="results-section hidden" id="results">
+
+        <!-- Risk Score Widget -->
+        <div class="risk-widget">
+          <div class="risk-gauge-wrapper">
+            <svg class="risk-gauge" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+              <!-- Track -->
+              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1e293b" stroke-width="16" stroke-linecap="round"/>
+              <!-- Fill arc (dynamic via JS) -->
+              <path id="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#22c55e" stroke-width="16" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+              <!-- Score text -->
+              <text x="100" y="95" text-anchor="middle" class="gauge-score" id="gauge-score">0</text>
+              <text x="100" y="112" text-anchor="middle" class="gauge-label">/ 100</text>
+            </svg>
+          </div>
+          <div class="risk-meta">
+            <div class="risk-level-badge" id="risk-badge">Analyzing...</div>
+            <div class="risk-verdict" id="risk-verdict"></div>
+          </div>
+        </div>
+
+        <!-- Score Breakdown Bar -->
+        <div class="score-breakdown">
+          <h3 class="section-title">📊 Score Breakdown</h3>
+          <div class="breakdown-bars">
+            <div class="breakdown-item">
+              <span class="breakdown-label">🤖 ML Model</span>
+              <div class="breakdown-track">
+                <div class="breakdown-fill" id="ml-bar" style="width:0%"></div>
+              </div>
+              <span class="breakdown-pct" id="ml-pct">0%</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="breakdown-label">📐 Rules Engine</span>
+              <div class="breakdown-track">
+                <div class="breakdown-fill" id="rule-bar" style="width:0%"></div>
+              </div>
+              <span class="breakdown-pct" id="rule-pct">0%</span>
+            </div>
+            <div class="breakdown-item">
+              <span class="breakdown-label">🌐 Domain Check</span>
+              <div class="breakdown-track">
+                <div class="breakdown-fill" id="domain-bar" style="width:0%"></div>
+              </div>
+              <span class="breakdown-pct" id="domain-pct">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Red Flags -->
+        <div class="flags-section" id="flags-section">
+          <h3 class="section-title">🚩 Red Flags Detected</h3>
+          <div id="flags-list" class="flags-list"></div>
+        </div>
+
+        <!-- Highlighted Text -->
+        <div class="highlight-section" id="highlight-section">
+          <h3 class="section-title">🔍 Suspicious Text Highlighted</h3>
+          <div id="highlighted-text" class="highlighted-text"></div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="recs-section" id="recs-section">
+          <h3 class="section-title">💡 What To Do</h3>
+          <ul class="recs-list" id="recs-list"></ul>
+        </div>
+
+        <!-- Re-analyze button -->
+        <button class="btn-reanalyze" id="reanalyze-btn">🔄 Analyze Another Job</button>
+      </div>
+
+      <!-- Empty error state -->
+      <div class="error-state hidden" id="error-state">
+        <span class="error-icon">⚠️</span>
+        <p id="error-message">Something went wrong. Please try again.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>LeakedIn &nbsp;|&nbsp; Built for Hackathena 2.0 &nbsp;|&nbsp; Protecting job seekers with AI</p>
+    <p class="footer-api">API: <a href="http://localhost:8000/docs" target="_blank">localhost:8000/docs</a></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
