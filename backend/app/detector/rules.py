@@ -59,9 +59,10 @@ SCAM_RULES = [
         "CRITICAL",
         50,
         "Cheque or Crypto Payment Scheme",
-        "Fake cheque and crypto schemes involve sending fraudulent checks or demanding crypto transfers (USDT, Bitcoin).",
+        "Fake cheque and crypto schemes involve sending fraudulent checks for home office equipment or demanding crypto transfers.",
         [
-            r"\b(?:cash\s+our\s+check|deposit\s+(?:the\s+)?check|wire\s+the\s+remainder|send\s+back\s+excess)\b",
+            r"\b(?:cash\s+our\s+che?ck|deposit\s+(?:the\s+)?che?ck|wire\s+the\s+remainder|send\s+back\s+excess)\b",
+            r"\b(?:equipment\s+che?ck|home\s+office\s+(?:equipment\s+)?che?ck|che?ck\s+for\s+(?:home\s+office|supplies|equipment|setup))\b",
             r"\b(?:western\s+union|moneygram|bitcoin|crypto|usdt|binance|gift\s*card)\b",
         ]
     ),
@@ -76,7 +77,8 @@ SCAM_RULES = [
         "Telegram / WhatsApp-Only Recruiter",
         "Professional hiring managers communicate via enterprise emails or portals, not private Telegram or WhatsApp chats.",
         [
-            r"(?:contact|message|dm|reach|chat\s+with|interview\s+on)\s+(?:our\s+)?(?:hr|recruiter|manager)?\s*(?:via|on|through|at)?\s*(?:telegram|whatsapp)\b",
+            r"(?:contact|message|dm|reach|chat\s+with|interview\s+on|proceed\s+on)\s+(?:our\s+)?(?:hiring\s+)?(?:hr|recruiter|manager)?\s*(?:immediately|asap|now)?\s*(?:via|on|through|at)?\s*[:\-]?\s*(?:telegram|whatsapp)\b",
+            r"\b(?:telegram|whatsapp)\s*(?:handle|id|contact|desk|username|channel)?\s*[:\-]?\s*@[a-zA-Z0-9_]{3,}\b",
             r"(?:t\.me\/[a-zA-Z0-9_]+|wa\.me\/[0-9]+)",
             r"(?:send\s+(?:cv|resume|details)\s+(?:on|to|via)\s+(?:whatsapp|telegram))\b",
             r"\bwhatsapp\s*(?:no|number|contact)?\s*[:\-]?\s*(?:\+?\d[\d\s\-]{8,15}\d)",
@@ -146,7 +148,8 @@ SCAM_RULES = [
             r"(?:good\s+)?stipend\s*(?::|is)?\s*\(?(?:₹|rs\.?|inr|\$)?\s*\d+\s*(?:-|to)\s*(?:₹|rs\.?|inr|\$)?\s*\d+\)?",
             r"(?:data\s*entry|copy\s*paste|form\s*filling|typing|sms\s*sending)\s*(?:job|work)?\s*(?:earn|pays?|salary)?\s*(?:₹|rs\.?|inr|\$)?\s*(?:[3-9]\d|\d{3,})\s*(?:k|thousand|\/|\s*per\s*)(?:day|week|month)",
             r"(?:earn|salary|make)\s*(?:₹|rs\.?|inr|\$)\s*[4-9]\d{3,}\s*(?:per\s*week|\/week|daily|per\s*day)",
-            r"(?:no\s+experience\s+(?:required|needed))\b.*(?:earn|salary|make)\s*(?:₹|rs\.?|inr|\$|\d+k)",
+            r"(?:compensation|salary|pay|earn|rate)\s*[:\-]?\s*\$\s*[3-9]\d\s*\/?\s*(?:hr|hour)",
+            r"(?:no\s+(?:prior\s+)?experience\s+(?:required|needed))\b",
             r"\b(?:earn\s+while\s+you\s+sleep|guaranteed\s+daily\s+income|100%\s+guaranteed\s+job)\b",
         ]
     ),
