@@ -53,3 +53,46 @@ print(f"  Verdict     : {legit_result['verdict']}")
 print(f"  ML Score    : {legit_result['ml_score_pct']}%")
 print(f"  Rule Flags  : {legit_result['rule_flag_count']}")
 print(f"  Domain Flags: {legit_result['domain_flag_count']}")
+assert legit_result["risk_score"] <= 25, f"Legit job score too high: {legit_result['risk_score']}"
+assert legit_result["risk_level"] == "Safe"
+
+print()
+print("=" * 60)
+print("STUDENT INTERNSHIP SCAM ANALYSIS (USER CASE)")
+print("=" * 60)
+sample_intern_scam = """
+We are happy to offer you an opportunity to work as a Marketing intern for pursuing students (part-time job) where you can earn more than your Pocket money. Immediate Hiring, just pay 5000 initially
+
+Your opportunity involves
+
+* Work from home
+* Branding/Promotion
+* Good Stipend (2500-21000)
+* Marketing Intern certificate 
+* Free internship opportunity
+* Letter of recommendation 
+
+TO APPLY FILL
+
+NAME:
+COLLEGE:
+BRANCH&YEAR:
+PH:
+EMAIL:
+COMFORTABLE LANGUAGE:
+STATE YOU BELONG TO:
+"""
+intern_result = analyse(sample_intern_scam)
+print(f"  Risk Score  : {intern_result['risk_score']}/100")
+print(f"  Risk Level  : {intern_result['risk_level']}")
+print(f"  Verdict     : {intern_result['verdict']}")
+print(f"  ML Score    : {intern_result['ml_score_pct']}%")
+print(f"  Rule Flags  : {intern_result['rule_flag_count']} flags (penalty: {intern_result['rule_penalty']})")
+print(f"  Top Signals : {intern_result['ml_top_signals']}")
+
+assert intern_result["risk_score"] >= 85, f"Intern scam score too low: {intern_result['risk_score']}"
+assert intern_result["risk_level"] == "High Risk"
+assert "Critical scam indicators" in intern_result["verdict"]
+assert intern_result["rule_penalty"] >= 80
+
+print("\nAll aggregator test assertions passed successfully!")

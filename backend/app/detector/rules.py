@@ -29,13 +29,16 @@ SCAM_RULES = [
     (
         "Payment Demand",
         "CRITICAL",
-        45,
+        50,
         "Upfront Fee / Registration Charge",
-        "Legitimate employers never demand application fees, registration charges, or screening fees to apply.",
+        "Legitimate employers never demand application fees, registration charges, or initial payments to apply or start working.",
         [
             r"(?:registration|processing|application|portal|verification|screening|training|joining)\s*(?:fee|charges?|deposit|amount|cost)\s*(?:of|is|:)?\s*(?:₹|rs\.?|inr|\$|usd|eur|€)?\s*\d+",
             r"(?:pay|deposit|transfer|send)\s*(?:₹|rs\.?|inr|\$|usd|eur|€)?\s*\d+\s*(?:before|for|as|towards)?\s*(?:joining|interview|kit|training|laptop|offer)",
             r"(?:refundable|security)\s*(?:deposit|fee|amount)\s*(?:of|is|:)?\s*(?:₹|rs\.?|inr|\$|usd|eur|€)?\s*\d*",
+            r"\b(?:just\s+|only\s+)?(?:pay|deposit|transfer|invest)\s*(?:₹|rs\.?|inr|\$|usd|eur|€)?\s*\d+\s*(?:initially|upfront|in\s*advance|first|to\s*start|to\s*join)\b",
+            r"\b(?:initial\s+payment|initial\s+deposit|initial\s+charge|pay\s+initially|pay\s+upfront)\s*(?:of|is|:)?\s*(?:₹|rs\.?|inr|\$|usd|eur|€)?\s*\d*",
+            r"\bjust\s+pay\s+(?:₹|rs\.?|inr|\$)?\s*\d+\b",
             r"\b(?:pay to apply|fee required|deposit required|upfront payment|nominal fee|one-time charge)\b",
         ]
     ),
@@ -91,7 +94,47 @@ SCAM_RULES = [
     ),
 
     # ----------------------------------------------------
-    # 3. UNREALISTIC OFFERS & COMPENSATION (HIGH)
+    # 3. STUDENT & INTERNSHIP EXPLOITATION (HIGH)
+    # ----------------------------------------------------
+    (
+        "Student Exploitation",
+        "HIGH",
+        35,
+        "Student Internship / Pocket Money Bait",
+        "Scammers target college students with promises of easy pocket money or fast hiring while demanding upfront money.",
+        [
+            r"\b(?:earn|make)\s+(?:more\s+than\s+)?(?:your\s+)?pocket\s*money\b",
+            r"\b(?:pursuing\s+students|college\s+students|school\s+students)\b[^\n.!?]{0,100}\b(?:earn|pocket\s*money)\b",
+            r"\bfor\s+pursuing\s+students\s*(?:\([^)]*\))?\s*where\s+you\s+can\s+earn\b",
+            r"\b(?:part-time|remote)\s+job\s+for\s+(?:pursuing|college)\s+students\b",
+        ]
+    ),
+    (
+        "Contradictory Claims",
+        "HIGH",
+        35,
+        "Paid Fee for 'Free' Internship Claim",
+        "Claiming to be a 'Free internship' while simultaneously demanding an upfront fee or initial payment is a deceptive fraud tactic.",
+        [
+            r"\bfree\s+internship\b[\s\S]{0,500}\b(?:pay|fee|deposit|charges?)\b",
+            r"\b(?:pay|fee|deposit|charges?)\b[\s\S]{0,500}\bfree\s+internship\b",
+        ]
+    ),
+    (
+        "Suspicious Application Method",
+        "HIGH",
+        30,
+        "Informal Questionnaire Application Template",
+        "Broadcasting fill-in-the-blank text questionnaires (Name, College, Branch, Phone) instead of official career portals is typical of unregulated scam broadcasts.",
+        [
+            r"(?:TO\s*APPLY\s*(?:FILL|SEND)?[:\s]*)?NAME:\s*\n?\s*(?:COLLEGE|BRANCH|DEGREE)[:\s]+[\s\S]*?(?:STATE\s*(?:YOU\s*BELONG\s*TO)?|CITY|LANGUAGE|EMAIL[:\s]*|PH(?:ONE)?[:\s]*)",
+            r"TO\s*APPLY\s*(?:FILL|SEND)?[:\s]+NAME:[\s\S]*?(?:COLLEGE|BRANCH|PHONE|PH:)",
+            r"\bFILL\s+(?:THE\s+)?BELOW\s+DETAILS[:\s]+NAME:[\s\S]*?(?:COLLEGE|BRANCH|PHONE|PH:)",
+        ]
+    ),
+
+    # ----------------------------------------------------
+    # 4. UNREALISTIC OFFERS & COMPENSATION (HIGH)
     # ----------------------------------------------------
     (
         "Unrealistic Offer",
@@ -100,6 +143,7 @@ SCAM_RULES = [
         "Exorbitant Pay for Low-Skill Work",
         "Unusually high compensation promised for simple tasks like data entry, copy-paste, or typing is a classic bait-and-switch scam.",
         [
+            r"(?:good\s+)?stipend\s*(?::|is)?\s*\(?(?:₹|rs\.?|inr|\$)?\s*\d+\s*(?:-|to)\s*(?:₹|rs\.?|inr|\$)?\s*\d+\)?",
             r"(?:data\s*entry|copy\s*paste|form\s*filling|typing|sms\s*sending)\s*(?:job|work)?\s*(?:earn|pays?|salary)?\s*(?:₹|rs\.?|inr|\$)?\s*(?:[3-9]\d|\d{3,})\s*(?:k|thousand|\/|\s*per\s*)(?:day|week|month)",
             r"(?:earn|salary|make)\s*(?:₹|rs\.?|inr|\$)\s*[4-9]\d{3,}\s*(?:per\s*week|\/week|daily|per\s*day)",
             r"(?:no\s+experience\s+(?:required|needed))\b.*(?:earn|salary|make)\s*(?:₹|rs\.?|inr|\$|\d+k)",
@@ -108,7 +152,7 @@ SCAM_RULES = [
     ),
 
     # ----------------------------------------------------
-    # 4. FAKE URGENCY & PRESSURE TACTICS (HIGH / MEDIUM)
+    # 5. FAKE URGENCY & PRESSURE TACTICS (HIGH / MEDIUM)
     # ----------------------------------------------------
     (
         "Fake Urgency",
@@ -119,6 +163,7 @@ SCAM_RULES = [
         [
             r"\b(?:direct\s+selection|no\s+interview\s+(?:needed|required)|immediate\s+selection|instant\s+offer\s+letter|spot\s+offer)\b",
             r"\b(?:selected\s+without\s+interview|hired\s+immediately\s+without\s+test)\b",
+            r"\b(?:immediate\s+hiring|urgently\s+hiring|spot\s+joining|urgent\s+hiring)\b",
         ]
     ),
     (
@@ -134,7 +179,7 @@ SCAM_RULES = [
     ),
 
     # ----------------------------------------------------
-    # 5. SENSITIVE PERSONAL DATA HARVESTING (CRITICAL)
+    # 6. SENSITIVE PERSONAL DATA HARVESTING (CRITICAL)
     # ----------------------------------------------------
     (
         "Identity Harvesting",

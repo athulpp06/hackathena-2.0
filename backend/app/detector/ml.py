@@ -110,23 +110,26 @@ def predict(
         "ml_verdict": verdict,
         "ml_confidence_level": confidence,
         "top_scam_signals": top_signals,
-        "model_version": "tfidf-logreg-v1.0",
+        "model_version": "tfidf-logreg-v2.0",
     }
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
 _SCAM_FEATURE_WORDS = [
-    # Financial scam indicators commonly seen in training corpus
+    # Financial scam indicators and upfront payment demands
     "registration fee", "security deposit", "training fee", "processing charge",
     "wire transfer", "western union", "moneygram", "bitcoin", "crypto",
+    "just pay", "pay initially", "pay upfront", "initial payment", "initial deposit",
+    "screening fee", "portal charge", "nominal fee",
     # Communication red flags
     "whatsapp", "telegram", "personal email", "gmail", "yahoo",
-    # Unrealistic job signals
+    # Student / internship exploitation & unrealistic claims
+    "pocket money", "free internship", "good stipend", "immediate hiring",
     "earn weekly", "daily income", "earn per day", "no experience required",
     "no interview", "direct selection", "urgent hiring", "spot offer",
     "work from home typing", "data entry earn", "form filling",
-    "guaranteed income", "100 percent guaranteed",
+    "guaranteed income", "100 percent guaranteed", "to apply fill",
 ]
 
 
