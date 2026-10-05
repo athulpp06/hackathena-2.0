@@ -34,24 +34,83 @@
   <main class="analyzer-wrapper">
     <div class="analyzer-card">
 
+      <!-- Input Mode Tabs -->
+      <div class="input-tabs">
+        <button class="tab-btn active" id="tab-text" type="button">
+          <span class="tab-icon">📝</span> Paste Text
+        </button>
+        <button class="tab-btn" id="tab-image" type="button">
+          <span class="tab-icon">📸</span> Image / Screenshot
+        </button>
+      </div>
+
       <!-- Input Section -->
       <div class="input-section">
-        <div class="input-header">
-          <label class="input-label" for="job-text">Paste Job Posting Here</label>
-          <div class="sample-buttons">
-            <button class="btn-sample btn-sample-scam" id="load-scam">⚠️ Load Scam Example</button>
-            <button class="btn-sample btn-sample-real" id="load-real">✅ Load Real Job</button>
+
+        <!-- Panel 1: Text Input -->
+        <div class="input-panel active" id="panel-text">
+          <div class="input-header">
+            <label class="input-label" for="job-text">Paste Job Description</label>
+            <div class="sample-buttons">
+              <button type="button" class="btn-sample btn-sample-scam" id="load-scam">⚠️ Load Scam Text</button>
+              <button type="button" class="btn-sample btn-sample-real" id="load-real">✅ Load Real Job</button>
+            </div>
+          </div>
+          <textarea
+            id="job-text"
+            class="job-textarea"
+            placeholder="Paste the full job description, including title, company, salary, requirements, and contact details...&#10;&#10;Example: 'URGENT HIRING: Earn Rs 45000/week from home. No experience required. WhatsApp us now...'"
+            rows="9"
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <!-- Panel 2: Image / Screenshot Input -->
+        <div class="input-panel hidden" id="panel-image">
+          <div class="input-header">
+            <label class="input-label">Upload or Paste Screenshot</label>
+            <div class="sample-buttons">
+              <button type="button" class="btn-sample btn-sample-scam" id="load-scam-img">⚠️ Load Scam Screenshot</button>
+              <button type="button" class="btn-sample btn-sample-real" id="load-real-img">✅ Load Real Screenshot</button>
+            </div>
+          </div>
+
+          <!-- Drag and drop zone -->
+          <div class="drop-zone" id="drop-zone">
+            <input type="file" id="file-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/bmp,image/tiff" class="file-input-hidden" />
+            <div class="drop-zone-prompt" id="drop-prompt">
+              <div class="drop-icon">🖼️</div>
+              <p class="drop-main-text">Drag & drop job posting image here, or <span class="drop-browse">browse files</span></p>
+              <p class="drop-sub-text">Supports PNG, JPG, WebP, BMP &nbsp;•&nbsp; Or simply press <kbd>Ctrl+V</kbd> to paste a screenshot directly</p>
+            </div>
+
+            <!-- Preview thumbnail inside drop zone -->
+            <div class="drop-zone-preview hidden" id="drop-preview">
+              <img id="preview-img" src="" alt="Job posting screenshot preview" />
+              <div class="preview-overlay">
+                <span class="preview-filename" id="preview-filename">screenshot.png</span>
+                <button type="button" class="btn-remove-image" id="remove-img-btn" title="Remove image">✕ Remove</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- OCR Status Indicator -->
+          <div class="ocr-status-card hidden" id="ocr-status-card">
+            <span class="ocr-spinner"></span>
+            <span class="ocr-status-text" id="ocr-status-text">Scanning image text with OCR...</span>
+          </div>
+
+          <!-- Extracted text preview -->
+          <div class="ocr-extracted-card hidden" id="ocr-extracted-card">
+            <div class="ocr-extracted-header">
+              <span class="ocr-extracted-title">📄 Extracted Text from Image (<span id="ocr-char-count">0</span> characters)</span>
+              <span class="ocr-engine-badge" id="ocr-engine-badge">OCR Ready</span>
+            </div>
+            <textarea id="ocr-extracted-text" class="ocr-extracted-textarea" rows="4" placeholder="Extracted text will appear here..."></textarea>
           </div>
         </div>
-        <textarea
-          id="job-text"
-          class="job-textarea"
-          placeholder="Paste the full job description, including title, company, salary, requirements, and contact details...&#10;&#10;Example: 'URGENT HIRING: Earn Rs 45000/week from home. No experience required. WhatsApp us now...'"
-          rows="10"
-          spellcheck="false"
-        ></textarea>
 
-        <!-- Optional fields -->
+        <!-- Optional fields (common to both modes) -->
         <div class="optional-fields">
           <div class="field-group">
             <label class="field-label" for="company-name">Company Name (optional)</label>
@@ -63,7 +122,7 @@
           </div>
         </div>
 
-        <button class="btn-analyze" id="analyze-btn">
+        <button class="btn-analyze" id="analyze-btn" type="button">
           <span id="btn-label">🔍 Analyze Job Posting</span>
           <span id="btn-spinner" class="btn-spinner hidden"></span>
         </button>

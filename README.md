@@ -128,11 +128,13 @@ uvicorn backend.app.main:app --reload --port 8000
 
 ---
 
+---
+
 ## 📡 API Specification
 
-### `POST /analyse-job`
+### 1. `POST /api/v1/analyse-job` (Raw Text Input)
 
-**Request Body:**
+**Request Body (`application/json`):**
 ```json
 {
   "text": "Full job description text...",
@@ -141,29 +143,38 @@ uvicorn backend.app.main:app --reload --port 8000
 }
 ```
 
-**Response:**
+### 2. `POST /api/v1/analyse-image` (Image / Screenshot OCR Input)
+
+**Request (`multipart/form-data`):**
+* `file`: Image or screenshot (`.png`, `.jpg`, `.jpeg`, `.webp`, `.bmp`, `.tiff`)
+* `company_name`: Optional declared company name (`Form` field)
+* `contact_email`: Optional contact email (`Form` field)
+
+**Response (`application/json`):**
 ```json
 {
   "risk_score": 88,
   "risk_level": "High Risk",
-  "verdict": "Critical Scam Indicators Detected",
-  "ml_score": 0.94,
+  "verdict": "Critical scam indicators detected. Do NOT respond or pay anything.",
+  "ml_score_pct": 92,
+  "ocr_extracted_text": "Extracted text from screenshot...",
+  "ocr_engine": "Windows Native OCR",
+  "ocr_char_count": 422,
   "red_flags": [
     {
       "category": "Financial Demand",
       "severity": "CRITICAL",
-      "message": "Requests upfront payment or registration fee",
-      "matched_text": "registration fee of $150",
+      "title": "Upfront Fee / Registration Charge",
+      "matched_text": "security deposit of Rs 1500",
       "start": 124,
       "end": 148
-    },
+    }
+  ],
+  "domain_flags": [
     {
-      "category": "Communication",
+      "type": "FREE_WEBMAIL",
       "severity": "HIGH",
-      "message": "Directs applicant to WhatsApp or Telegram only",
-      "matched_text": "contact our HR on WhatsApp",
-      "start": 210,
-      "end": 236
+      "title": "Free Webmail Used for Corporate Contact"
     }
   ],
   "recommendations": [
@@ -177,8 +188,9 @@ uvicorn backend.app.main:app --reload --port 8000
 
 ## 🗺️ Roadmap
 - [x] **Day 1 - Module 1**: Benchmark dataset acquisition & ML model training.
-- [ ] **Day 1 - Module 2**: Rule-based scam detection & character span highlighter.
-- [ ] **Day 1 - Module 3**: Hybrid Risk Aggregator & `POST /analyse-job` API.
-- [ ] **Day 1 - Module 4**: Company and contact domain verification.
-- [ ] **Day 1 - Module 5**: Interactive frontend UI with live text highlighting.
+- [x] **Day 1 - Module 2**: Rule-based scam detection & character span highlighter.
+- [x] **Day 1 - Module 3**: Hybrid Risk Aggregator & `POST /api/v1/analyse-job` API.
+- [x] **Day 1 - Module 4**: Company and contact domain verification.
+- [x] **Day 1 - Module 5**: Interactive frontend UI with live text highlighting, screenshot OCR & clipboard paste (`Ctrl+V`).
 - [ ] **Day 2**: Candidate profile verification & resume scanner module.
+
