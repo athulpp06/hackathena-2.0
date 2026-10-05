@@ -40,16 +40,20 @@ RECRUITMENT_ROLE_KEYWORDS = {
     "intern", "internship", "engineer", "developer", "manager", "executive",
     "assistant", "operator", "specialist", "consultant", "analyst", "designer",
     "writer", "coordinator", "representative", "clerk", "associate", "trainee",
-    "officer", "salesperson", "recruiter", "lead", "architect", "data entry",
+    "officer", "officers", "salesperson", "recruiter", "lead", "architect", "data entry",
+    "typist", "typing", "packaging", "assembly", "trader", "telecaller",
 }
 
 RECRUITMENT_ACTION_KEYWORDS = {
     "hiring", "apply", "opening", "vacancy", "vacancies", "job offer", "stipend",
     "salary", "compensation", "per month", "per week", "per day", "daily income",
-    "part-time", "full-time", "work from home", "wfh", "remote work", "direct selection",
+    "part-time", "part time", "full-time", "full time", "work from home", "wfh", "remote work",
+    "direct selection", "spot selection", "recruitment", "examination", "interview",
     "requirements", "qualifications", "eligibility", "send cv", "submit resume",
     "careers", "to apply", "job description", "immediate joining", "spot offer",
     "pocket money", "branding promotion", "training kit", "registration fee",
+    "security deposit", "activation fee", "earn", "earning", "monthly", "daily",
+    "commission", "payout", "job", "jobs",
 }
 
 RESUME_MARKERS = [
@@ -114,16 +118,24 @@ def _offline_classify_text(text: str) -> Dict[str, Any]:
         }
 
     # 3. Check for general conversational prompts or recipes
-    for p in CONVERSATION_OR_PROMPT_MARKERS:
-        if re.search(p, cleaned):
-            return {
-                "is_job_posting": False,
-                "content_type": "general_prompt_or_chat",
-                "confidence": 0.88,
-                "reasoning": "The text appears to be a conversational message, AI prompt, or general query rather than a recruitment offer.",
-                "provider": "offline_gatekeeper",
-                "gemini_scam_assessment": None,
-            }
+    # Ensure recruitment offers that happen to start with actionable verbs (e.g. "Solve simple 4-letter captchas and earn...")
+    # are not misclassified as AI prompts if they contain explicit earning/job terms.
+    is_recruitment_like = bool(re.search(
+        r"\b(?:earn\b|earning\b|salary\b|stipend\b|per\s*(?:month|day|week|hr)|deposit\b|activation\s+fee|hiring\b|vacancy\b|job\b|recruitment\b)",
+        cleaned
+    ))
+
+    if not is_recruitment_like:
+        for p in CONVERSATION_OR_PROMPT_MARKERS:
+            if re.search(p, cleaned):
+                return {
+                    "is_job_posting": False,
+                    "content_type": "general_prompt_or_chat",
+                    "confidence": 0.88,
+                    "reasoning": "The text appears to be a conversational message, AI prompt, or general query rather than a recruitment offer.",
+                    "provider": "offline_gatekeeper",
+                    "gemini_scam_assessment": None,
+                }
 
     # 4. Count recruitment indicators
     tokens = set(re.findall(r"\b[a-z]{3,}\b", cleaned))
@@ -131,8 +143,8 @@ def _offline_classify_text(text: str) -> Dict[str, Any]:
     action_count = sum(1 for w in RECRUITMENT_ACTION_KEYWORDS if w in cleaned)
 
     # Specific job patterns
-    has_apply_pattern = bool(re.search(r"\b(?:to\s*apply|how\s+to\s+apply|send\s+(?:cv|resume)|apply\s+at|visit\s+http)\b", cleaned))
-    has_compensation = bool(re.search(r"\b(?:stipend|salary|lpa|ctc|per\s*(?:month|week|day|hr|hour)|\d+k\s*\/\s*month)\b", cleaned))
+    has_apply_pattern = bool(re.search(r"\b(?:to\s*apply|how\s+to\s+apply|send\s+(?:cv|resume)|apply\s+at|visit\s+http|applications?\s+accepted|portal\s+at|careers?|reach\s+our|contact\s+us)\b", cleaned))
+    has_compensation = bool(re.search(r"\b(?:stipend|salary|lpa|ctc|per\s*(?:month|week|day|hr|hour|page)|\d+k\s*\/\s*month|earn\b|earning\b|commission\b|payout\b|usdt|inr|rs\.?\s*\d+)\b", cleaned))
     has_intern_pattern = bool(re.search(r"\b(?:intern(?:ship)?|pursuing\s+students?|marketing\s+intern|wfh\s+intern)\b", cleaned))
 
     score = 0
