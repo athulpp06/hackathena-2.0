@@ -4,9 +4,9 @@ Combines ML probability, rule-based penalties, and domain verification
 into a single calibrated risk score (0–100) with a clear verdict.
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
-from backend.app.detector import ml, rules, verifier
+from backend.app.detector import ml, rules, verifier, gatekeeper
 
 _RULE_ENGINE = rules.RuleEngine()
 
@@ -123,15 +123,21 @@ def analyse(
     text: str,
     declared_company: str = "",
     contact_email: str = "",
+    image_bytes: Optional[bytes] = None,
+    mime_type: str = "image/png",
+    skip_gatekeeper: bool = False,
 ) -> Dict[str, Any]:
     """
-    Full hybrid analysis pipeline.
+    Full hybrid analysis pipeline with AI Gatekeeper.
 
     Parameters
     ----------
     text              : Raw job posting text.
     declared_company  : Optional company name (from user input or extracted).
     contact_email     : Optional contact email (from user input or extracted).
+    image_bytes       : Optional raw image bytes for Gemini multimodal vision.
+    mime_type         : MIME type of uploaded image.
+    skip_gatekeeper   : Set True to bypass gatekeeper relevance check (e.g. forced re-run).
 
     Returns
     -------
@@ -140,9 +146,46 @@ def analyse(
     if not text or not text.strip():
         return {
             "error": "No text provided for analysis.",
+            "is_job_posting": False,
             "risk_score": 0,
             "risk_level": "Unknown",
         }
+
+    # --- Layer 0: AI Gatekeeper & Content Relevance Verification ---
+    gate_res = {"is_job_posting": True, "content_type": "job_posting", "confidence": 1.0, "reasoning": "Gatekeeper bypassed", "provider": "bypassed", "gemini_scam_assessment": None}
+    if not skip_gatekeeper:
+        gate_res = gatekeeper.classify_job_relevance(text, image_bytes=image_bytes, mime_type=mime_type)
+        if not gate_res.get("is_job_posting", True):
+            detected_type = gate_res.get("content_type", "unrelated_content").replace("_", " ").title()
+            reasoning = gate_res.get("reasoning", "Input does not match recruitment patterns.")
+            return {
+                "is_job_posting": False,
+                "content_type": gate_res.get("content_type", "unrelated_content"),
+                "gatekeeper_reasoning": reasoning,
+                "gatekeeper_provider": gate_res.get("provider", "offline_gatekeeper"),
+                "risk_score": None,
+                "risk_level": "Invalid Content",
+                "verdict": f"The input appears to be {detected_type} rather than a job vacancy or recruitment offer.",
+                "recommendations": [
+                    "Please provide an actual job offer, employment advertisement, or internship posting to evaluate recruitment fraud.",
+                    f"Current input was detected as: {detected_type}."
+                ],
+                "red_flags": [],
+                "rule_flag_count": 0,
+                "rule_penalty": 0,
+                "highlighted_spans": [],
+                "domain_flags": [],
+                "domain_flag_count": 0,
+                "emails_found": [],
+                "company_mismatch": False,
+                "ml_fraud_probability": 0.0,
+                "ml_score_pct": 0,
+                "ml_verdict": "Analysis Skipped (Not a job posting)",
+                "ml_confidence_level": "N/A",
+                "ml_top_signals": [],
+                "model_version": "tfidf-logreg-v2.0",
+                "gemini_scam_assessment": gate_res.get("gemini_scam_assessment"),
+            }
 
     # --- Layer 1: ML Inference ---
     ml_result = ml.predict(text)
@@ -173,6 +216,14 @@ def analyse(
     recs    = _recommendations(rule_result["red_flags"], domain_result["flags"])
 
     return {
+        # Gatekeeper layer output
+        "is_job_posting": True,
+        "content_type": gate_res.get("content_type", "job_posting"),
+        "gatekeeper_reasoning": gate_res.get("reasoning", "Verified as recruitment posting."),
+        "gatekeeper_provider": gate_res.get("provider", "offline_gatekeeper"),
+        "gemini_scam_assessment": gate_res.get("gemini_scam_assessment"),
+
+        # Risk scoring
         "risk_score": risk_score,
         "risk_level": level,
         "verdict": verdict,

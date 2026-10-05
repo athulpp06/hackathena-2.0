@@ -43,6 +43,12 @@ The **Job Posting Scanner** provides an end-to-end fraud analysis pipeline for j
 
 LeakedIn uses a **hybrid multi-layer approach** to maximize detection accuracy while ensuring complete explainability:
 
+### 0. AI Gatekeeper & Relevance Classifier (`backend/app/detector/gatekeeper.py`)
+*Prevents false fraud scores by ensuring the input is an actual employment offer before running the scam detection engine.*
+- **Google Gemini Multimodal Vision (`gemini-1.5-flash`)**: Directly scans screenshots/photos or arbitrary prompt text to evaluate if they represent real hiring announcements or unrelated content (e.g. food photos, scenic wallpapers, memes, code snippets, or recipes).
+- **Built-In Offline Heuristic Fallback (Zero-Config)**: Evaluates semantic recruitment structures without requiring any external API key. Distinguishes hiring offers from candidate CVs/resumes, grocery invoices/receipts, and casual conversations.
+- **Graceful Handling**: If a non-job photo or prompt is detected, fraud scoring is skipped and an informative card explains the recognized category with actionable suggestions.
+
 ### 1. Machine Learning Layer (`backend/app/detector/ml.py`)
 - **Dataset**: Trained on the benchmark **EMSCAD (Employment Scam Aegean Dataset)** containing **17,880 real and fraudulent job postings**, augmented with modern student internship and recruitment fraud templates.
 - **Vectorization**: Sublinear TF-IDF with unigrams and bigrams (20,000 features).
@@ -223,6 +229,12 @@ uvicorn backend.app.main:app --reload --port 8000
 }
 ```
 
+### 3. `GET /api/v1/gatekeeper-status`
+Returns the status of the AI gatekeeper and whether Google Gemini multimodal API is active.
+
+### 4. `POST /api/v1/set-gemini-key`
+Dynamically sets or clears the Google Gemini API key at runtime (`{"api_key": "AIzaSy..."}`).
+
 ---
 
 ## 🗺️ Roadmap
@@ -231,5 +243,6 @@ uvicorn backend.app.main:app --reload --port 8000
 - [x] **Day 1 - Module 3**: Hybrid Risk Aggregator & `POST /api/v1/analyse-job` API.
 - [x] **Day 1 - Module 4**: Company and contact domain verification.
 - [x] **Day 1 - Module 5**: Interactive frontend UI with live text highlighting, screenshot OCR & clipboard paste (`Ctrl+V`).
+- [x] **Day 1 - Module 6**: AI Gatekeeper & Relevance Classifier (Google Gemini Multimodal Vision + Zero-Config Offline Heuristics) to reject non-recruitment photos/prompts.
 - [ ] **Day 2**: Candidate profile verification & resume scanner module.
 

@@ -20,7 +20,13 @@
       <span class="logo-icon">🛡️</span>
       <span class="logo-text">Leaked<span class="logo-accent">In</span></span>
     </div>
-    <div class="header-tagline">AI-Powered Recruitment Security</div>
+    <div class="header-actions">
+      <button class="btn-gemini-status" id="gemini-toggle-btn" type="button" title="Configure Google Gemini Multimodal Gatekeeper">
+        <span class="gemini-sparkle">✨</span>
+        <span class="gemini-label">Gatekeeper: <strong id="gemini-status-label">Offline Active</strong></span>
+        <span class="status-indicator-dot" id="gemini-status-dot"></span>
+      </button>
+    </div>
   </header>
 
   <!-- Hero -->
@@ -54,6 +60,7 @@
             <div class="sample-buttons">
               <button type="button" class="btn-sample btn-sample-scam" id="load-scam">⚠️ Load Scam Text</button>
               <button type="button" class="btn-sample btn-sample-real" id="load-real">✅ Load Real Job</button>
+              <button type="button" class="btn-sample btn-sample-other" id="load-other">🍲 Load Recipe (Non-Job)</button>
             </div>
           </div>
           <textarea
@@ -131,73 +138,128 @@
       <!-- Results Section (hidden until analysis) -->
       <div class="results-section hidden" id="results">
 
-        <!-- Risk Score Widget -->
-        <div class="risk-widget">
-          <div class="risk-gauge-wrapper">
-            <svg class="risk-gauge" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-              <!-- Track -->
-              <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1e293b" stroke-width="16" stroke-linecap="round"/>
-              <!-- Fill arc (dynamic via JS) -->
-              <path id="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#22c55e" stroke-width="16" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
-              <!-- Score text -->
-              <text x="100" y="95" text-anchor="middle" class="gauge-score" id="gauge-score">0</text>
-              <text x="100" y="112" text-anchor="middle" class="gauge-label">/ 100</text>
-            </svg>
-          </div>
-          <div class="risk-meta">
-            <div class="risk-level-badge" id="risk-badge">Analyzing...</div>
-            <div class="risk-verdict" id="risk-verdict"></div>
-          </div>
-        </div>
-
-        <!-- Score Breakdown Bar -->
-        <div class="score-breakdown">
-          <h3 class="section-title">📊 Score Breakdown</h3>
-          <div class="breakdown-bars">
-            <div class="breakdown-item">
-              <span class="breakdown-label">🤖 ML Model</span>
-              <div class="breakdown-track">
-                <div class="breakdown-fill" id="ml-bar" style="width:0%"></div>
-              </div>
-              <span class="breakdown-pct" id="ml-pct">0%</span>
+        <!-- Gatekeeper Alert Card (Shown when input is NOT a recruitment posting) -->
+        <div class="gatekeeper-alert-card hidden" id="gatekeeper-alert">
+          <div class="gatekeeper-alert-header">
+            <div class="gatekeeper-icon-box">🚫</div>
+            <div class="gatekeeper-alert-meta">
+              <div class="gatekeeper-badge" id="gk-badge">Non-Recruitment Content</div>
+              <h2 class="gatekeeper-title" id="gk-title">Not a Job Posting</h2>
             </div>
-            <div class="breakdown-item">
-              <span class="breakdown-label">📐 Rules Engine</span>
-              <div class="breakdown-track">
-                <div class="breakdown-fill" id="rule-bar" style="width:0%"></div>
-              </div>
-              <span class="breakdown-pct" id="rule-pct">0%</span>
+            <span class="gk-provider-tag" id="gk-provider">Offline Heuristic Gatekeeper</span>
+          </div>
+          <p class="gatekeeper-desc" id="gk-reasoning">This input does not appear to be a job vacancy, hiring announcement, or internship offer.</p>
+          <div class="gatekeeper-details-grid">
+            <div class="gk-detail-box">
+              <span class="gk-detail-label">Detected Category</span>
+              <span class="gk-detail-val" id="gk-category">Recipe / Casual Content</span>
             </div>
-            <div class="breakdown-item">
-              <span class="breakdown-label">🌐 Domain Check</span>
-              <div class="breakdown-track">
-                <div class="breakdown-fill" id="domain-bar" style="width:0%"></div>
-              </div>
-              <span class="breakdown-pct" id="domain-pct">0%</span>
+            <div class="gk-detail-box">
+              <span class="gk-detail-label">Relevance Confidence</span>
+              <span class="gk-detail-val" id="gk-confidence">95%</span>
+            </div>
+            <div class="gk-detail-box">
+              <span class="gk-detail-label">Scam Risk Assessment</span>
+              <span class="gk-detail-val gk-skipped">Analysis Skipped</span>
             </div>
           </div>
+          <div class="gatekeeper-advice-box">
+            <strong>💡 Why was fraud scoring skipped?</strong>
+            <p id="gk-suggestion">LeakedIn uses an AI Gatekeeper to ensure fraud scoring is only calculated on actual employment recruitment offers. To test fraud detection, please provide a job description or internship announcement.</p>
+          </div>
+          <button class="btn-reanalyze" id="gk-retry-btn" type="button" style="margin-top: 16px;">🔄 Try With a Job Posting</button>
         </div>
 
-        <!-- Red Flags -->
-        <div class="flags-section" id="flags-section">
-          <h3 class="section-title">🚩 Red Flags Detected</h3>
-          <div id="flags-list" class="flags-list"></div>
-        </div>
+        <!-- Job Posting Analysis Content (Shown when input IS a job posting) -->
+        <div id="job-analysis-content">
 
-        <!-- Highlighted Text -->
-        <div class="highlight-section" id="highlight-section">
-          <h3 class="section-title">🔍 Suspicious Text Highlighted</h3>
-          <div id="highlighted-text" class="highlighted-text"></div>
-        </div>
+          <!-- Verified Recruitment Content Banner -->
+          <div class="job-verified-banner" id="job-verified-banner">
+            <span class="verified-icon">🛡️</span>
+            <div class="verified-meta">
+              <span class="verified-title">Verified Recruitment Content</span>
+              <span class="verified-sub">Inspected by <strong id="verified-engine">AI Gatekeeper</strong></span>
+            </div>
+            <span class="verified-confidence" id="verified-confidence">95% match</span>
+          </div>
 
-        <!-- Recommendations -->
-        <div class="recs-section" id="recs-section">
-          <h3 class="section-title">💡 What To Do</h3>
-          <ul class="recs-list" id="recs-list"></ul>
-        </div>
+          <!-- Gemini AI Insights (Optional, if Gemini returned notes) -->
+          <div class="gemini-insights-card hidden" id="gemini-insights-card">
+            <div class="gemini-insights-header">
+              <span class="sparkle-icon">✨</span>
+              <span class="gemini-insights-title">Google Gemini Multimodal Insights</span>
+            </div>
+            <p class="gemini-insights-text" id="gemini-insights-text"></p>
+          </div>
 
-        <!-- Re-analyze button -->
-        <button class="btn-reanalyze" id="reanalyze-btn">🔄 Analyze Another Job</button>
+          <!-- Risk Score Widget -->
+          <div class="risk-widget">
+            <div class="risk-gauge-wrapper">
+              <svg class="risk-gauge" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+                <!-- Track -->
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1e293b" stroke-width="16" stroke-linecap="round"/>
+                <!-- Fill arc (dynamic via JS) -->
+                <path id="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#22c55e" stroke-width="16" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                <!-- Score text -->
+                <text x="100" y="95" text-anchor="middle" class="gauge-score" id="gauge-score">0</text>
+                <text x="100" y="112" text-anchor="middle" class="gauge-label">/ 100</text>
+              </svg>
+            </div>
+            <div class="risk-meta">
+              <div class="risk-level-badge" id="risk-badge">Analyzing...</div>
+              <div class="risk-verdict" id="risk-verdict"></div>
+            </div>
+          </div>
+
+          <!-- Score Breakdown Bar -->
+          <div class="score-breakdown">
+            <h3 class="section-title">📊 Score Breakdown</h3>
+            <div class="breakdown-bars">
+              <div class="breakdown-item">
+                <span class="breakdown-label">🤖 ML Model</span>
+                <div class="breakdown-track">
+                  <div class="breakdown-fill" id="ml-bar" style="width:0%"></div>
+                </div>
+                <span class="breakdown-pct" id="ml-pct">0%</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">📐 Rules Engine</span>
+                <div class="breakdown-track">
+                  <div class="breakdown-fill" id="rule-bar" style="width:0%"></div>
+                </div>
+                <span class="breakdown-pct" id="rule-pct">0%</span>
+              </div>
+              <div class="breakdown-item">
+                <span class="breakdown-label">🌐 Domain Check</span>
+                <div class="breakdown-track">
+                  <div class="breakdown-fill" id="domain-bar" style="width:0%"></div>
+                </div>
+                <span class="breakdown-pct" id="domain-pct">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Red Flags -->
+          <div class="flags-section" id="flags-section">
+            <h3 class="section-title">🚩 Red Flags Detected</h3>
+            <div id="flags-list" class="flags-list"></div>
+          </div>
+
+          <!-- Highlighted Text -->
+          <div class="highlight-section" id="highlight-section">
+            <h3 class="section-title">🔍 Suspicious Text Highlighted</h3>
+            <div id="highlighted-text" class="highlighted-text"></div>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="recs-section" id="recs-section">
+            <h3 class="section-title">💡 What To Do</h3>
+            <ul class="recs-list" id="recs-list"></ul>
+          </div>
+
+          <!-- Re-analyze button -->
+          <button class="btn-reanalyze" id="reanalyze-btn">🔄 Analyze Another Job</button>
+        </div>
       </div>
 
       <!-- Empty error state -->
@@ -207,6 +269,37 @@
       </div>
     </div>
   </main>
+
+  <!-- Gemini API Key Configuration Modal -->
+  <div class="modal-backdrop hidden" id="gemini-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">✨</span>
+          <h3 class="modal-title">Google Gemini AI Gatekeeper</h3>
+        </div>
+        <button class="modal-close" id="gemini-modal-close" type="button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          Configure Google Gemini (<code>gemini-1.5-flash</code>) for multimodal vision scan on uploaded screenshots and semantic relevance verification.
+        </p>
+        <div class="modal-status-box" id="modal-status-box">
+          <span class="modal-status-dot" id="modal-status-dot"></span>
+          <span id="modal-status-text">Checking status...</span>
+        </div>
+        <div class="field-group" style="margin-top: 16px;">
+          <label class="field-label" for="gemini-key-input">Gemini API Key (Optional)</label>
+          <input type="password" id="gemini-key-input" class="field-input" placeholder="AIzaSy..." />
+          <p class="field-help">If left empty, LeakedIn automatically operates with the zero-config offline heuristic gatekeeper.</p>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-modal-secondary" id="gemini-clear-btn" type="button">Clear Key</button>
+        <button class="btn-modal-primary" id="gemini-save-btn" type="button">Save & Apply</button>
+      </div>
+    </div>
+  </div>
 
   <footer class="footer">
     <p>LeakedIn &nbsp;|&nbsp; Built for Hackathena 2.0 &nbsp;|&nbsp; Protecting job seekers with AI</p>

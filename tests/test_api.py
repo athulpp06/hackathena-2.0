@@ -40,6 +40,16 @@ async def test_analyse_job_endpoint():
     assert result["company_mismatch"] is True
     print(f"  [PASS] test_analyse_job_endpoint -> Risk Score: {result['risk_score']}/100, Level: {result['risk_level']}")
 
+async def test_gatekeeper_non_job_api():
+    req = JobAnalysisRequest(
+        text="Chocolate Chip Cookies: Cream 1 cup softened butter with 1 cup brown sugar and 1 tsp vanilla extract. Stir in 2 cups chocolate chips and bake at 350F for 10 minutes."
+    )
+    result = await analyse_job(req)
+    assert result["is_job_posting"] is False
+    assert result["risk_score"] is None
+    assert result["risk_level"] == "Invalid Content"
+    print(f"  [PASS] test_gatekeeper_non_job_api -> is_job_posting={result['is_job_posting']}, verdict={result['verdict']}")
+
 async def main():
     print("=" * 60)
     print("RUNNING MODULE 5 API ROUTE TESTS")
@@ -47,6 +57,7 @@ async def main():
     await test_health_endpoint()
     await test_ocr_status_endpoint()
     await test_analyse_job_endpoint()
+    await test_gatekeeper_non_job_api()
     print("=" * 60)
     print("ALL MODULE 5 API ROUTE TESTS PASSED SUCCESSFULLY!")
     print("=" * 60)

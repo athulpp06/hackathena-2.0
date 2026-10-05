@@ -62,6 +62,25 @@ To Apply:
 Submit your resume and portfolio via our official careers portal: https://stripe.com/jobs
 For questions, contact our recruiting team at recruiting@stripe.com`;
 
+const SAMPLE_NON_JOB = `Delicious Homemade Chocolate Brownies Recipe
+Ingredients:
+- 200g dark chocolate, roughly chopped
+- 150g unsalted butter
+- 200g brown sugar
+- 3 large eggs
+- 100g all-purpose flour
+- 30g Dutch cocoa powder
+- 1/2 tsp vanilla extract
+
+Instructions:
+1. Preheat oven to 180°C (350°F) and grease a 20cm square baking tin.
+2. In a heatproof bowl set over simmering water, melt the butter and dark chocolate together until smooth.
+3. In a separate bowl, whisk eggs and brown sugar until pale and fluffy.
+4. Gently fold the melted chocolate mixture into the eggs.
+5. Sift in the all-purpose flour and cocoa powder, then fold until combined.
+6. Pour into the prepared tin and bake for 25-30 minutes until the top is crackled.
+Serve warm with a scoop of vanilla ice cream!`;
+
 // ── State ───────────────────────────────────────────────────
 let currentMode = 'text'; // 'text' | 'image'
 let currentImageFile = null;
@@ -132,6 +151,28 @@ document.getElementById('load-real').addEventListener('click', () => {
   emailInput.value = 'recruiting@stripe.com';
   jobTextarea.focus();
 });
+
+const loadOtherBtn = document.getElementById('load-other');
+if (loadOtherBtn) {
+  loadOtherBtn.addEventListener('click', () => {
+    jobTextarea.value = SAMPLE_NON_JOB;
+    companyInput.value = '';
+    emailInput.value = '';
+    jobTextarea.focus();
+  });
+}
+
+const gkRetryBtn = document.getElementById('gk-retry-btn');
+if (gkRetryBtn) {
+  gkRetryBtn.addEventListener('click', () => {
+    resultsDiv.classList.add('hidden');
+    errorDiv.classList.add('hidden');
+    if (currentMode === 'text') {
+      jobTextarea.focus();
+      jobTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+}
 
 // ── Image Mode Sample Buttons ──────────────────────────────
 async function loadSampleImage(url, filename, company) {
@@ -253,23 +294,29 @@ reanalyzeBtn.addEventListener('click', () => {
 async function runAnalysis() {
   errorDiv.classList.add('hidden');
   resultsDiv.classList.add('hidden');
+  const apiKey = getStoredGeminiKey();
 
   if (currentMode === 'text') {
     const text = jobTextarea.value.trim();
-    if (!text || text.length < 30) {
-      showError('Please paste a job description (at least 30 characters) to analyze.');
+    if (!text || text.length < 25) {
+      showError('Please paste at least 25 characters to analyze.');
       return;
     }
 
-    setLoading(true, 'Analyzing text with AI models...');
+    setLoading(true, 'Analyzing text with AI Gatekeeper & models...');
     try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (apiKey) {
+        headers['x-gemini-key'] = apiKey;
+      }
       const response = await fetch(`${API_BASE}/analyse-job`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           text,
           company_name: companyInput.value.trim(),
           contact_email: emailInput.value.trim(),
+          gemini_api_key: apiKey || undefined,
         }),
       });
 
@@ -293,9 +340,9 @@ async function runAnalysis() {
       return;
     }
 
-    setLoading(true, 'Extracting text with OCR and scanning for scam signals...');
+    setLoading(true, 'Inspecting image with Gatekeeper & OCR...');
     ocrStatusCard.classList.remove('hidden');
-    ocrStatusText.textContent = 'Running Optical Character Recognition (OCR)...';
+    ocrStatusText.textContent = 'Running multimodal scan and character recognition...';
 
     const formData = new FormData();
     formData.append('file', currentImageFile);
@@ -305,10 +352,18 @@ async function runAnalysis() {
     if (emailInput.value.trim()) {
       formData.append('contact_email', emailInput.value.trim());
     }
+    if (apiKey) {
+      formData.append('gemini_api_key', apiKey);
+    }
 
     try {
+      const headers = {};
+      if (apiKey) {
+        headers['x-gemini-key'] = apiKey;
+      }
       const response = await fetch(`${API_BASE}/analyse-image`, {
         method: 'POST',
+        headers,
         body: formData,
       });
 
@@ -328,7 +383,7 @@ async function runAnalysis() {
       }
 
       ocrStatusCard.classList.remove('hidden');
-      ocrStatusText.textContent = `Text extracted successfully via ${data.ocr_engine || 'OCR'}.`;
+      ocrStatusText.textContent = `Analysis complete via ${data.gatekeeper_provider || data.ocr_engine || 'AI Engine'}.`;
 
       renderResults(data, data.ocr_extracted_text || '');
     } catch (err) {
@@ -341,6 +396,57 @@ async function runAnalysis() {
 
 // ── Render Results ─────────────────────────────────────────
 function renderResults(data, analyzedText) {
+  const gatekeeperAlert = document.getElementById('gatekeeper-alert');
+  const jobAnalysisContent = document.getElementById('job-analysis-content');
+
+  // Case 1: Input is NOT a Recruitment Posting (Gatekeeper triggered)
+  if (data.is_job_posting === false) {
+    if (jobAnalysisContent) jobAnalysisContent.classList.add('hidden');
+    if (gatekeeperAlert) {
+      gatekeeperAlert.classList.remove('hidden');
+      const catName = (data.content_type || 'Unrelated Content').replace(/_/g, ' ').toUpperCase();
+      document.getElementById('gk-title').textContent = data.verdict || 'Not a Job Posting';
+      document.getElementById('gk-reasoning').textContent = data.gatekeeper_reasoning || 'This content lacks employment recruitment markers.';
+      document.getElementById('gk-category').textContent = catName;
+      document.getElementById('gk-confidence').textContent = data.confidence ? `${Math.round(data.confidence * 100)}%` : '92%';
+      document.getElementById('gk-provider').textContent = data.gatekeeper_provider === 'gemini-1.5-flash' ? 'Google Gemini 1.5 Flash' : 'Offline Heuristic Gatekeeper';
+      if (data.recommendations && data.recommendations[0]) {
+        document.getElementById('gk-suggestion').textContent = data.recommendations[0];
+      }
+    }
+
+    resultsDiv.classList.remove('hidden');
+    setTimeout(() => {
+      resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+    return;
+  }
+
+  // Case 2: Input IS a verified Job Posting
+  if (gatekeeperAlert) gatekeeperAlert.classList.add('hidden');
+  if (jobAnalysisContent) jobAnalysisContent.classList.remove('hidden');
+
+  // Verified Recruitment Badge
+  const engineLabel = data.gatekeeper_provider === 'gemini-1.5-flash' ? 'Google Gemini 1.5 Flash' : 'AI Gatekeeper';
+  const engineEl = document.getElementById('verified-engine');
+  if (engineEl) engineEl.textContent = engineLabel;
+  const confEl = document.getElementById('verified-confidence');
+  if (confEl && data.confidence) {
+    confEl.textContent = `${Math.round(data.confidence * 100)}% match`;
+  }
+
+  // Gemini Multimodal Insights (if available)
+  const geminiCard = document.getElementById('gemini-insights-card');
+  const geminiText = document.getElementById('gemini-insights-text');
+  if (geminiCard && geminiText) {
+    if (data.gemini_scam_assessment) {
+      geminiCard.classList.remove('hidden');
+      geminiText.textContent = data.gemini_scam_assessment;
+    } else {
+      geminiCard.classList.add('hidden');
+    }
+  }
+
   // 1. Risk Gauge
   animateGauge(data.risk_score, data.risk_level, data.verdict);
 
@@ -545,3 +651,113 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+// ── Gemini Key & Gatekeeper Management ─────────────────────
+function getStoredGeminiKey() {
+  return localStorage.getItem('leakedin_gemini_key') || '';
+}
+
+function setStoredGeminiKey(key) {
+  if (key) {
+    localStorage.setItem('leakedin_gemini_key', key.trim());
+  } else {
+    localStorage.removeItem('leakedin_gemini_key');
+  }
+}
+
+async function checkGatekeeperStatus() {
+  try {
+    const key = getStoredGeminiKey();
+    const headers = {};
+    if (key) headers['x-gemini-key'] = key;
+
+    const res = await fetch(`${API_BASE}/gatekeeper-status`, { headers });
+    if (res.ok) {
+      const status = await res.json();
+      updateGatekeeperUI(status);
+    }
+  } catch (err) {
+    console.warn('Gatekeeper status check failed:', err);
+  }
+}
+
+function updateGatekeeperUI(status) {
+  const label = document.getElementById('gemini-status-label');
+  const dot = document.getElementById('gemini-status-dot');
+  const modalText = document.getElementById('modal-status-text');
+  const modalDot = document.getElementById('modal-status-dot');
+
+  const isGemini = Boolean(status.gemini_configured);
+  if (label) {
+    label.textContent = isGemini ? 'Gemini 1.5 Flash' : 'Offline Active';
+  }
+  if (dot) {
+    dot.className = `status-indicator-dot ${isGemini ? '' : 'offline'}`;
+  }
+  if (modalText) {
+    modalText.textContent = isGemini
+      ? `Google Gemini 1.5 Flash active (${status.key_source || 'configured'})`
+      : 'Zero-config offline heuristic gatekeeper active';
+  }
+  if (modalDot) {
+    modalDot.className = `modal-status-dot ${isGemini ? '' : 'offline'}`;
+  }
+}
+
+// Modal wiring
+const geminiToggleBtn = document.getElementById('gemini-toggle-btn');
+const geminiModal = document.getElementById('gemini-modal');
+const geminiModalClose = document.getElementById('gemini-modal-close');
+const geminiKeyInput = document.getElementById('gemini-key-input');
+const geminiSaveBtn = document.getElementById('gemini-save-btn');
+const geminiClearBtn = document.getElementById('gemini-clear-btn');
+
+if (geminiToggleBtn && geminiModal) {
+  geminiToggleBtn.addEventListener('click', () => {
+    if (geminiKeyInput) geminiKeyInput.value = getStoredGeminiKey();
+    geminiModal.classList.remove('hidden');
+    checkGatekeeperStatus();
+  });
+}
+if (geminiModalClose && geminiModal) {
+  geminiModalClose.addEventListener('click', () => geminiModal.classList.add('hidden'));
+}
+if (geminiModal) {
+  geminiModal.addEventListener('click', (e) => {
+    if (e.target === geminiModal) geminiModal.classList.add('hidden');
+  });
+}
+if (geminiSaveBtn) {
+  geminiSaveBtn.addEventListener('click', async () => {
+    const key = geminiKeyInput ? geminiKeyInput.value.trim() : '';
+    setStoredGeminiKey(key);
+    try {
+      await fetch(`${API_BASE}/set-gemini-key`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: key }),
+      });
+    } catch (_) {}
+    await checkGatekeeperStatus();
+    if (geminiModal) geminiModal.classList.add('hidden');
+  });
+}
+if (geminiClearBtn) {
+  geminiClearBtn.addEventListener('click', async () => {
+    if (geminiKeyInput) geminiKeyInput.value = '';
+    setStoredGeminiKey('');
+    try {
+      await fetch(`${API_BASE}/set-gemini-key`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: '' }),
+      });
+    } catch (_) {}
+    await checkGatekeeperStatus();
+    if (geminiModal) geminiModal.classList.add('hidden');
+  });
+}
+
+// Initialize gatekeeper status on app start
+checkGatekeeperStatus();
+
