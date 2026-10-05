@@ -234,3 +234,60 @@ async def ocr_status():
         "message": f"OCR is ready using {engine}." if available else "No OCR engine is available. Image upload is disabled.",
     }
 
+
+# ── Day 2: Candidate Integrity & Resume Scanner Endpoints ────────────────────
+
+class ResumeAnalysisRequest(BaseModel):
+    text: str = Field(..., min_length=20, description="Raw candidate resume or CV text to analyze")
+
+
+@router.post("/analyse-resume", summary="Analyse candidate resume text for fraud and timeline anomalies")
+async def analyse_resume_endpoint(request: ResumeAnalysisRequest):
+    """
+    Performs comprehensive recruiter screening on candidate resume text:
+    - Extracts structured candidate entities (education, work experience, skills, references)
+    - Detects overlapping full-time employment (moonlighting / fabrication)
+    - Detects chronological paradoxes (degrees preceding high school, early senior claims)
+    - Identifies degrees from unaccredited diploma mills
+    - Detects anachronistic tech stack claims (claiming tools before their release date)
+    - Detects AI synthetic CV prompt leakage and template placeholders
+    - Audits reference contacts for disposable burner domains and free consumer webmail abuse
+    """
+    from backend.app.candidate import aggregator as candidate_aggregator
+    try:
+        result = candidate_aggregator.analyse_candidate_resume(text=request.text)
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Resume analysis failed: {str(e)}")
+
+
+@router.post("/analyse-resume-file", summary="Upload and analyse candidate resume document (PDF or Image)")
+async def analyse_resume_file_endpoint(
+    file: UploadFile = File(..., description="Candidate resume file (PDF, PNG, JPEG, etc.)")
+):
+    """
+    Uploads a candidate resume document (PDF, PNG, JPG, WebP) and performs full candidate integrity analysis.
+    """
+    from backend.app.candidate import aggregator as candidate_aggregator
+    try:
+        content = await file.read()
+        if len(content) < 50:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty or corrupted.")
+
+        result = candidate_aggregator.analyse_candidate_resume(
+            file_bytes=content,
+            filename=file.filename or "resume.pdf",
+        )
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Resume file analysis failed: {str(e)}")
+
+
