@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LeakedIn Popup</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <div class="logo">
+        <span class="icon">🛡️</span>
+        <strong>LeakedIn</strong>
+      </div>
+      <button id="btn-settings-toggle" class="btn-icon" title="Configure API Endpoint">⚙️</button>
+    </header>
+
+    <!-- Settings Pane (Collapsible) -->
+    <div id="settings-pane" class="settings-pane" style="display:none;">
+      <label for="api-base-input">API Base URL:</label>
+      <div class="settings-row">
+        <input type="text" id="api-base-input" value="http://localhost:8000" />
+        <button id="btn-save-settings">Save</button>
+      </div>
+    </div>
+
+    <!-- Quick Scan Input -->
+    <div class="input-section">
+      <textarea id="popup-text-input" placeholder="Paste a snippet or message to scan... (Or right-click any selected text on the page)" rows="4"></textarea>
+      <button id="btn-quick-scan" class="btn-scan">🔍 Scan with LeakedIn</button>
+    </div>
+
+    <!-- Loading State -->
+    <div id="popup-loading" class="popup-loading" style="display:none;">
+      <div class="spinner"></div>
+      <span>Scanning against ML + 40+ Indian scam rules...</span>
+    </div>
+
+    <!-- Result Display -->
+    <div id="popup-result" class="popup-result" style="display:none;">
+      <div class="result-header">
+        <div id="score-badge" class="score-badge">0</div>
+        <div class="result-meta">
+          <div id="result-level" class="result-level">Safe</div>
+          <div id="result-verdict" class="result-verdict">Legitimate</div>
+        </div>
+      </div>
+
+      <div id="popup-flags" class="popup-flags"></div>
+
+      <a id="btn-open-dashboard" href="http://localhost:5500" target="_blank" class="btn-dashboard">
+        Open Full Dashboard & Advice ↗
+      </a>
+    </div>
+
+    <footer class="popup-footer">
+      <span>🔒 In-memory analysis. Zero data stored.</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

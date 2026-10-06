@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "trained_at": "2026-10-06T02:10:08.507245+00:00",
+  "dataset": "EMSCAD + real-world seeds",
+  "dataset_hash_md5": "6cf8dba3fc88712d8d1181741874c041",
+  "train_samples": 14464,
+  "test_samples": 3576,
+  "real_world_seeds": 160,
+  "model_type": "TF-IDF(15k, 1-2gram, sublinear) + CalibratedClassifierCV(LR, isotonic, cv=5)",
+  "metrics": {
+    "roc_auc": 0.9901,
+    "fraud_precision": 0.9571,
+    "fraud_recall": 0.7746,
+    "fraud_f1": 0.8562
+  }
+}

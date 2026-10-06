@@ -162,3 +162,15 @@ async def extract_text_from_image_bytes(image_bytes: bytes, filename: str = "") 
             raise RuntimeError(f"Windows Native OCR extraction failed: {e}")
 
     raise RuntimeError("OCR text extraction failed with all available engines.")
+
+
+def extract_text_from_image(image_bytes: bytes) -> str:
+    """Synchronous helper for bots and scripts to extract text from image bytes."""
+    import asyncio
+    try:
+        return asyncio.run(extract_text_from_image_bytes(image_bytes))[0]
+    except RuntimeError:
+        # Handle already running event loop
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(lambda: asyncio.run(extract_text_from_image_bytes(image_bytes))[0]).result()

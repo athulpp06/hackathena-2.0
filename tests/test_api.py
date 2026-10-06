@@ -50,6 +50,18 @@ async def test_gatekeeper_non_job_api():
     assert result["risk_level"] == "Invalid Content"
     print(f"  [PASS] test_gatekeeper_non_job_api -> is_job_posting={result['is_job_posting']}, verdict={result['verdict']}")
 
+async def test_analyse_url_ssrf_blocked():
+    from backend.app.api.routes import analyse_url, URLAnalysisRequest
+    from fastapi import HTTPException
+    req = URLAnalysisRequest(url="http://127.0.0.1:8000/internal-admin")
+    try:
+        await analyse_url(req)
+        assert False, "Should have blocked internal SSRF IP"
+    except HTTPException as e:
+        assert e.status_code == 400
+        assert "blocked" in e.detail.lower() or "internal" in e.detail.lower()
+        print("  [PASS] test_analyse_url_ssrf_blocked -> Successfully blocked internal IP:", e.detail)
+
 async def main():
     print("=" * 60)
     print("RUNNING MODULE 5 API ROUTE TESTS")
@@ -58,6 +70,7 @@ async def main():
     await test_ocr_status_endpoint()
     await test_analyse_job_endpoint()
     await test_gatekeeper_non_job_api()
+    await test_analyse_url_ssrf_blocked()
     print("=" * 60)
     print("ALL MODULE 5 API ROUTE TESTS PASSED SUCCESSFULLY!")
     print("=" * 60)

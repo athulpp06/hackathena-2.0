@@ -1,16 +1,25 @@
 """
-Hybrid Risk Aggregation Engine.
-Combines ML probability, rule-based penalties, and domain verification
-into a single calibrated risk score (0–100) with a clear verdict.
+Hybrid Risk Aggregation Engine (Unified v1 + v2).
+Combines AI Gatekeeper, Calibrated ML, Multilingual YAML Heuristics,
+Domain Typosquatting, and Community Threat Intelligence into a calibrated risk score (0–100).
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
 
-from backend.app.detector import ml, rules, verifier, gatekeeper
+from backend.app.config import (
+    AGGREGATOR_DOMAIN_MISMATCH_PENALTY,
+    AGGREGATOR_ML_WEIGHT,
+    AGGREGATOR_RULE_MAX_CAP,
+    AGGREGATOR_RULE_SEVERITY_POINTS,
+)
+from backend.app.detector import advice, gatekeeper, ml, rules, verifier
+from backend.app.utils.normalizer import detect_language
 
 _RULE_ENGINE = rules.RuleEngine()
+_LOW_CONFIDENCE_LANGS = {"hi", "ml", "mr", "ta", "te", "kn", "gu", "bn"}
+_SHORT_TEXT_WORD_THRESHOLD = 25
 
-# Risk level thresholds
+
 def _risk_level(score: int) -> str:
     if score >= 76:
         return "High Risk"
@@ -21,7 +30,8 @@ def _risk_level(score: int) -> str:
     else:
         return "Safe"
 
-def _verdict(score: int, flag_count: int, has_critical: bool = False) -> str:
+
+def _verdict(score: int, flag_count: int = 0, has_critical: bool = False) -> str:
     if score >= 76 or has_critical:
         return "Critical scam indicators detected. Do NOT respond or pay anything."
     elif score >= 51:
@@ -31,92 +41,106 @@ def _verdict(score: int, flag_count: int, has_critical: bool = False) -> str:
     else:
         return "No significant fraud signals detected. Always verify independently."
 
-def _recommendations(red_flags: list, domain_flags: list) -> List[str]:
-    recs = []
-    categories = {f["category"] for f in red_flags}
-    domain_types = {f["type"] for f in domain_flags}
 
-    if "Payment Demand" in categories:
-        recs.append("Never pay any registration fee, security deposit, or training charge to get a job or internship.")
-    if "Student Exploitation" in categories:
-        recs.append("Legitimate internships evaluate skills through interviews — they never demand upfront money or lure students with 'easy pocket money'.")
-    if "Contradictory Claims" in categories:
-        recs.append("Beware of fraudulent postings that claim to be a 'free internship' while demanding initial charges or deposits.")
-    if "Suspicious Application Method" in categories:
-        recs.append("Never send personal details via informal chat forms or questionnaires. Apply only through formal company career portals.")
-    if "Suspicious Communication" in categories:
-        recs.append("Verify the recruiter via the company's official careers page before responding on WhatsApp or Telegram.")
-    if "Fake Urgency" in categories:
-        recs.append("Ignore artificial urgency — legitimate employers give adequate time to evaluate offers.")
-    if "Unrealistic Offer" in categories:
-        recs.append("Cross-check the salary or stipend on Glassdoor, LinkedIn, or AmbitionBox for the role and experience level described.")
-    if "Identity Harvesting" in categories:
-        recs.append("Never share Aadhaar, PAN, bank details, or OTP with an unverified recruiter.")
-    if "DOMAIN_MISMATCH" in domain_types or "FREE_WEBMAIL" in domain_types:
-        recs.append("Verify recruiter identity by contacting the company directly through their official website.")
-    if "DISPOSABLE_EMAIL" in domain_types:
-        recs.append("The contact email is a disposable/burner address. Report this posting to cybercrime.gov.in.")
-
-    if not recs:
-        recs.append("Always verify the company independently before sharing personal information.")
-
-    return recs
-
-
-def _compute_risk_score(
-    ml_prob: float,
-    rule_penalty: int,
-    domain_penalty: int,
-    red_flags: list,
-    domain_flags: list,
-) -> int:
+def aggregate(
+    ml_score: float,
+    rule_flags: list[dict[str, Any]],
+    verifier_result: dict[str, Any],
+    text: str = "",
+) -> dict[str, Any]:
     """
-    Computes a calibrated multi-layer risk score (0-100).
-    Ensures:
-    1. Critical severity rules (upfront fee, identity theft, cheque fraud, disposable email)
-       always trigger High Risk (>=85-95) with zero chance of being diluted.
-    2. High ML probability or strong heuristic rules can independently indicate fraud.
-    3. Completely clean legitimate postings remain low (<=25, Safe).
+    Unified score aggregation with language-aware weights, combination bonuses, and risk floors.
     """
-    # 1. Calibrated ML risk
-    if ml_prob <= 0.40:
-        ml_risk = max(0.0, (ml_prob - 0.15) / 0.25) * 25.0
+    lang = detect_language(text) if text else "en"
+    word_count = len(text.split()) if text else 100
+
+    # 1. Language-aware weight selection
+    if lang in _LOW_CONFIDENCE_LANGS or word_count < _SHORT_TEXT_WORD_THRESHOLD:
+        ml_weight = AGGREGATOR_ML_WEIGHT * 0.5    # 30.0
+        rule_cap = AGGREGATOR_RULE_MAX_CAP * 1.5  # 60.0
     else:
-        ml_risk = 25.0 + min(1.0, (ml_prob - 0.40) / 0.60) * 75.0
+        ml_weight = AGGREGATOR_ML_WEIGHT          # 60.0
+        rule_cap = AGGREGATOR_RULE_MAX_CAP        # 40.0
 
-    # 2. Rule penalty (0-100)
-    rule_score = float(rule_penalty)
+    # 2. Base ML score
+    risk_score = ml_score * ml_weight
 
-    # 3. Domain penalty (0-50 scaled to 0-100)
-    domain_score = min(100.0, (float(domain_penalty) / 50.0) * 100.0)
+    # 3. Rule penalties
+    rule_score = 0.0
+    categories_hit = set()
+    has_critical = False
 
-    # Multi-signal fusion: primary signal drives the assessment, secondary corroborates
-    signals = sorted([rule_score, ml_risk, domain_score], reverse=True)
-    primary, secondary, tertiary = signals[0], signals[1], signals[2]
+    for flag in rule_flags:
+        severity = str(flag.get("severity", "LOW")).upper()
+        category = str(flag.get("category", ""))
+        rule_score += AGGREGATOR_RULE_SEVERITY_POINTS.get(severity, 0.0)
+        categories_hit.add(category)
+        if severity == "CRITICAL":
+            has_critical = True
 
-    blended = primary * 0.70 + secondary * 0.20 + tertiary * 0.10
-    score = max(blended, primary * 0.88)
+    rule_score = min(rule_score, rule_cap)
+    risk_score += rule_score
 
-    # Severity analysis
-    critical_rules = [f for f in red_flags if f.get("severity") == "CRITICAL"]
-    critical_domain = [f for f in domain_flags if f.get("severity") == "CRITICAL"]
-    high_rules = [f for f in red_flags if f.get("severity") == "HIGH"]
+    # 4. Rule combination bonuses
+    if any("Financial" in c or "Payment" in c for c in categories_hit) and any("Identity" in c for c in categories_hit):
+        risk_score += 10.0
+    if any("Financial" in c or "Payment" in c for c in categories_hit) and any(c in categories_hit for c in ("Suspicious Contact", "Too Good To Be True", "Contradictory Claims")):
+        risk_score += 10.0
+    if any("Work-from-Home" in c for c in categories_hit) and any("Suspicious" in c or "Contact" in c for c in categories_hit):
+        risk_score += 5.0
 
-    # Hard guardrails for deterministic fraud patterns
-    if critical_rules or critical_domain:
-        if len(critical_rules) + len(critical_domain) >= 2 or rule_penalty >= 80 or ml_prob >= 0.75:
-            base_floor = 94.0
-        elif rule_penalty >= 50 or ml_prob >= 0.50:
-            base_floor = 90.0
-        else:
-            base_floor = 85.0
-        score = max(score, base_floor)
-    elif len(high_rules) >= 2 or (len(high_rules) >= 1 and rule_penalty >= 50) or ml_prob >= 0.85:
-        score = max(score, 78.0)
-    elif rule_penalty >= 35 or len(high_rules) >= 1 or ml_prob >= 0.65:
-        score = max(score, 55.0)
+    # 5. Domain / reputation mismatches
+    if verifier_result.get("domain_mismatch", False) or verifier_result.get("company_mismatch", False) or verifier_result.get("suspicious_email", False):
+        risk_score += AGGREGATOR_DOMAIN_MISMATCH_PENALTY
+    if verifier_result.get("reputation_hits"):
+        risk_score += 15.0
 
-    return min(100, max(0, round(score)))
+    # 6. Clamp to 0-100 and apply critical risk floor
+    final_score = int(round(max(0, min(100, risk_score))))
+    if has_critical and final_score < 51:
+        final_score = 51
+
+    # 7. Risk level and verdict
+    if final_score <= 25:
+        level = "Safe"
+        verdict_text = "This job posting appears legitimate. No significant fraud signals detected."
+    elif final_score <= 50:
+        level = "Low Risk"
+        verdict_text = "This posting has minor concerns. Research the company and recruiter before sharing sensitive information."
+    elif final_score <= 75:
+        level = "Suspicious"
+        verdict_text = "Probable Scam Detected. Proceed with extreme caution."
+    else:
+        level = "High Risk"
+        verdict_text = "Critical Scam Indicators Detected (Critical scam indicators). Do not engage or send money."
+
+    # 7. Recommendations
+    recommendations: List[str] = []
+    if final_score > 25:
+        recommendations.append("Verify the employer on their official corporate portal and LinkedIn before applying.")
+    if any("Financial" in c or "Payment" in c for c in categories_hit):
+        recommendations.append("Never pay money to secure a job or internship — legitimate employers never demand fees.")
+    if any("Identity" in c for c in categories_hit):
+        recommendations.append("Do not share Aadhaar, PAN, or bank credentials before a formal contract and interview.")
+    if verifier_result.get("company_mismatch") or verifier_result.get("domain_mismatch"):
+        recommendations.append("Be wary of recruiters using free webmail (Gmail/Yahoo) claiming to represent major corporations.")
+    if not recommendations:
+        recommendations.append("Use official company career portals to apply and verify recruiter identities.")
+
+    return {
+        "risk_score": final_score,
+        "risk_level": level,
+        "verdict": verdict_text,
+        "recommendations": recommendations,
+        "_debug": {
+            "ml_weight_used": ml_weight,
+            "rule_cap_used": rule_cap,
+            "lang_detected": lang,
+            "word_count": word_count,
+            "has_critical_rule": has_critical,
+            "categories_hit": sorted(list(categories_hit)),
+        },
+    }
 
 
 def analyse(
@@ -128,20 +152,8 @@ def analyse(
     skip_gatekeeper: bool = False,
 ) -> Dict[str, Any]:
     """
-    Full hybrid analysis pipeline with AI Gatekeeper.
-
-    Parameters
-    ----------
-    text              : Raw job posting text.
-    declared_company  : Optional company name (from user input or extracted).
-    contact_email     : Optional contact email (from user input or extracted).
-    image_bytes       : Optional raw image bytes for Gemini multimodal vision.
-    mime_type         : MIME type of uploaded image.
-    skip_gatekeeper   : Set True to bypass gatekeeper relevance check (e.g. forced re-run).
-
-    Returns
-    -------
-    Structured analysis result dict matching the API response schema.
+    Full hybrid analysis pipeline featuring AI Gatekeeper, ML XAI, multilingual rules,
+    domain & reputation verification, and automated cybercrime complaint drafting.
     """
     if not text or not text.strip():
         return {
@@ -152,7 +164,14 @@ def analyse(
         }
 
     # --- Layer 0: AI Gatekeeper & Content Relevance Verification ---
-    gate_res = {"is_job_posting": True, "content_type": "job_posting", "confidence": 1.0, "reasoning": "Gatekeeper bypassed", "provider": "bypassed", "gemini_scam_assessment": None}
+    gate_res = {
+        "is_job_posting": True,
+        "content_type": "job_posting",
+        "confidence": 1.0,
+        "reasoning": "Gatekeeper bypassed",
+        "provider": "bypassed",
+        "gemini_scam_assessment": None,
+    }
     if not skip_gatekeeper:
         gate_res = gatekeeper.classify_job_relevance(text, image_bytes=image_bytes, mime_type=mime_type)
         if not gate_res.get("is_job_posting", True):
@@ -160,94 +179,106 @@ def analyse(
             reasoning = gate_res.get("reasoning", "Input does not match recruitment patterns.")
             return {
                 "is_job_posting": False,
-                "content_type": gate_res.get("content_type", "unrelated_content"),
+                "content_type": gate_res.get("content_type"),
                 "gatekeeper_reasoning": reasoning,
-                "gatekeeper_provider": gate_res.get("provider", "offline_gatekeeper"),
+                "gatekeeper_confidence": gate_res.get("confidence", 0.9),
+                "gatekeeper_provider": gate_res.get("provider", "offline_heuristic"),
                 "risk_score": None,
                 "risk_level": "Invalid Content",
-                "verdict": f"The input appears to be {detected_type} rather than a job vacancy or recruitment offer.",
-                "recommendations": [
-                    "Please provide an actual job offer, employment advertisement, or internship posting to evaluate recruitment fraud.",
-                    f"Current input was detected as: {detected_type}."
-                ],
+                "verdict": f"The submitted content appears to be a {detected_type.lower()} rather than a job vacancy or employment offer. Fraud analysis withheld.",
                 "red_flags": [],
-                "rule_flag_count": 0,
-                "rule_penalty": 0,
-                "highlighted_spans": [],
                 "domain_flags": [],
-                "domain_flag_count": 0,
-                "emails_found": [],
-                "company_mismatch": False,
-                "ml_fraud_probability": 0.0,
-                "ml_score_pct": 0,
-                "ml_verdict": "Analysis Skipped (Not a job posting)",
-                "ml_confidence_level": "N/A",
-                "ml_top_signals": [],
-                "model_version": "tfidf-logreg-v2.0",
-                "gemini_scam_assessment": gate_res.get("gemini_scam_assessment"),
+                "highlighted_spans": [],
+                "recommendations": [
+                    f"The submitted text or document appears to be a {detected_type.lower()} rather than a recruitment advertisement or offer.",
+                    "Please submit a genuine job posting, internship offer, or recruiter chat to perform fraud analysis.",
+                ],
+                "advice": [],
+                "emergency_steps": [],
+                "police_complaint_draft": "",
             }
 
-    # --- Layer 1: ML Inference ---
+    # --- Layer 1: Language Detection & Normalization ---
+    detected_lang = detect_language(text)
+
+    # --- Layer 2: Machine Learning Inference ---
     ml_result = ml.predict(text)
-    ml_prob = ml_result["ml_fraud_probability"]   # 0.0 – 1.0
+    ml_prob = ml_result.get("fraud_probability", 0.5)
 
-    # --- Layer 2: Rule-Based Heuristics ---
-    rule_result = _RULE_ENGINE.analyze(text)
-    rule_penalty = rule_result["total_penalty"]    # 0 – 100
+    # --- Layer 3: Rule-Based Heuristic Detection ---
+    rule_analysis = _RULE_ENGINE.analyze(text)
+    red_flags = rule_analysis["red_flags"]
+    rule_penalty = rule_analysis["total_penalty"]
+    highlighted_spans = rule_analysis["highlighted_spans"]
 
-    # --- Layer 3: Domain / Contact Verification ---
-    domain_result = verifier.verify(text, declared_company, contact_email)
-    domain_penalty = domain_result["penalty"]      # 0 – 50
+    # --- Layer 4: Domain & Contact Verification ---
+    verifier_result = verifier.verify(text, declared_company=declared_company, contact_email=contact_email)
+    domain_flags = verifier_result["flags"]
+    domain_penalty = verifier_result["penalty"]
+    entities = verifier_result.get("entities", {})
+    reputation_hits = verifier_result.get("reputation_hits", [])
 
-    # --- Scoring Formula with Multi-Signal Fusion & Critical Guardrails ---
-    has_critical = any(f.get("severity") == "CRITICAL" for f in rule_result["red_flags"]) or \
-                   any(f.get("severity") == "CRITICAL" for f in domain_result["flags"])
+    # --- Layer 5: Calibrated Risk Aggregation ---
+    agg_result = aggregate(
+        ml_score=ml_prob,
+        rule_flags=red_flags,
+        verifier_result=verifier_result,
+        text=text,
+    )
+    final_score = agg_result["risk_score"]
+    risk_level_str = agg_result["risk_level"]
+    verdict_str = agg_result["verdict"]
 
-    risk_score = _compute_risk_score(
-        ml_prob=ml_prob,
-        rule_penalty=rule_penalty,
-        domain_penalty=domain_penalty,
-        red_flags=rule_result["red_flags"],
-        domain_flags=domain_result["flags"],
+    # --- Layer 6: Contextual Advice & Complaint Draft ---
+    advice_info = advice.generate_advice(
+        red_flags=red_flags,
+        domain_flags=domain_flags,
+        risk_level=risk_level_str,
+        entities=entities,
+        company_name=declared_company,
+        reputation_hits=reputation_hits,
     )
 
-    level   = _risk_level(risk_score)
-    verdict = _verdict(risk_score, rule_result["flag_count"], has_critical=has_critical)
-    recs    = _recommendations(rule_result["red_flags"], domain_result["flags"])
+    # Clean display title for company
+    claimed_display = declared_company.strip().title() if declared_company else "Not Specified"
 
     return {
-        # Gatekeeper layer output
         "is_job_posting": True,
         "content_type": gate_res.get("content_type", "job_posting"),
-        "gatekeeper_reasoning": gate_res.get("reasoning", "Verified as recruitment posting."),
-        "gatekeeper_provider": gate_res.get("provider", "offline_gatekeeper"),
-        "gemini_scam_assessment": gate_res.get("gemini_scam_assessment"),
-
-        # Risk scoring
-        "risk_score": risk_score,
-        "risk_level": level,
-        "verdict": verdict,
-
-        # ML layer output
-        "ml_fraud_probability": ml_result["ml_fraud_probability"],
-        "ml_score_pct": ml_result["ml_score_pct"],
-        "ml_verdict": ml_result["ml_verdict"],
-        "ml_confidence_level": ml_result["ml_confidence_level"],
-        "ml_top_signals": ml_result["top_scam_signals"],
-
-        # Rule layer output
-        "red_flags": rule_result["red_flags"],
-        "rule_flag_count": rule_result["flag_count"],
-        "rule_penalty": rule_result["total_penalty"],
-        "highlighted_spans": rule_result["highlighted_spans"],
-
-        # Domain layer output
-        "domain_flags": domain_result["flags"],
-        "domain_flag_count": domain_result["flag_count"],
-        "emails_found": domain_result["emails_found"],
-        "company_mismatch": domain_result["company_mismatch"],
-
-        # Guidance
-        "recommendations": recs,
-        "model_version": ml_result["model_version"],
+        "gatekeeper": gate_res,
+        "language": detected_lang,
+        "risk_score": final_score,
+        "risk_level": risk_level_str,
+        "verdict": verdict_str,
+        # ML metrics
+        "ml_probability": ml_prob,
+        "ml_score_pct": ml_result.get("ml_score_pct", int(round(ml_prob * 100))),
+        "ml_verdict": ml_result.get("ml_verdict", "N/A"),
+        "ml_confidence": ml_result.get("ml_confidence_level", "MEDIUM"),
+        "ml_top_signals": ml_result.get("top_scam_signals", []),
+        "top_scam_signals": ml_result.get("top_scam_signals", []),
+        "model_explanation": ml_result.get("model_explanation", {}),
+        "model_version": ml_result.get("model_version", "2.0.0"),
+        # Rule breakdown
+        "rule_penalty": rule_penalty,
+        "rule_flag_count": len(red_flags),
+        "red_flags": red_flags,
+        "highlighted_spans": highlighted_spans,
+        # Domain & Contact breakdown
+        "domain_penalty": domain_penalty,
+        "domain_flag_count": len(domain_flags),
+        "domain_flags": domain_flags,
+        "company_name": claimed_display,
+        "company_mismatch": verifier_result.get("company_mismatch", False),
+        "has_free_email": verifier_result.get("has_free_email", False),
+        "has_disposable_email": verifier_result.get("has_disposable_email", False),
+        "typosquat_detected": verifier_result.get("typosquat_detected", False),
+        "entities": entities,
+        "reputation_hits": reputation_hits,
+        # Guidance & Recovery
+        "recommendations": agg_result["recommendations"],
+        "advice": advice_info["advice"],
+        "emergency_steps": advice_info["emergency_steps"],
+        "helpline": advice_info["helpline"],
+        "police_complaint_draft": advice_info["police_complaint_draft"],
     }

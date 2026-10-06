@@ -40,6 +40,21 @@ def test_verifier_no_email():
     assert any(f["type"] == "NO_CONTACT_INFO" for f in result["flags"])
     print("  [PASS] test_verifier_no_email")
 
+def test_verifier_typosquat_lookalike():
+    text = "Apply for Google Cloud intern! Send CV to recruiter@g00gle.com or visit https://google-careers-portal.xyz"
+    result = verify(text, declared_company="Google")
+    assert result["typosquat_detected"] is True
+    assert any(f["type"] == "TYPOSQUAT_DOMAIN" for f in result["flags"])
+    print("  [PASS] test_verifier_typosquat_lookalike")
+
+def test_verifier_upi_entities():
+    text = "Send your registration charges to jobs@okaxis or call +919876543210 on WhatsApp"
+    result = verify(text)
+    assert any(f["type"] == "UPI_ID_DETECTED" for f in result["flags"])
+    assert "jobs@okaxis" in result["entities"]["upi_ids"]
+    assert len(result["entities"]["phones"]) >= 1
+    print("  [PASS] test_verifier_upi_entities")
+
 if __name__ == "__main__":
     print("=" * 60)
     print("RUNNING MODULE 4 TESTS (Domain & Contact Verifier)")
@@ -48,6 +63,8 @@ if __name__ == "__main__":
     test_verifier_disposable_email()
     test_verifier_legitimate_corporate()
     test_verifier_no_email()
+    test_verifier_typosquat_lookalike()
+    test_verifier_upi_entities()
     print("=" * 60)
     print("ALL MODULE 4 TESTS PASSED SUCCESSFULLY!")
     print("=" * 60)

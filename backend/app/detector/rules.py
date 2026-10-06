@@ -1,11 +1,19 @@
 """
-Rule-Based Scam Detection Engine.
-Extracts high-precision fraud patterns and character spans for visual UI highlighting.
+Rule-Based Scam Detection Engine (Multilingual & Normalization-Aware).
+Extracts high-precision fraud patterns, categorizes threat vectors, and computes exact character spans.
 """
 
+import os
 import re
-from typing import List, Dict, Any, Optional
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List, Optional
+
+import yaml
+
+from backend.app.utils.normalizer import normalize_with_mapping
+
+PATTERNS_FILE = os.path.join(os.path.dirname(__file__), "patterns", "rules.yaml")
+
 
 @dataclass
 class RedFlag:
@@ -19,7 +27,10 @@ class RedFlag:
     end: int
 
     def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
+        d = asdict(self)
+        d["message"] = self.explanation  # Compatibility with v2
+        return d
+
 
 # Rule definitions: (category, severity, penalty, title, explanation, regex_patterns)
 SCAM_RULES = [
@@ -27,7 +38,7 @@ SCAM_RULES = [
     # 1. UPFRONT FINANCIAL DEMANDS (CRITICAL)
     # ----------------------------------------------------
     (
-        "Payment Demand",
+        "Financial Demand",
         "CRITICAL",
         50,
         "Upfront Fee / Registration Charge",
@@ -43,7 +54,7 @@ SCAM_RULES = [
         ]
     ),
     (
-        "Payment Demand",
+        "Financial Demand",
         "CRITICAL",
         40,
         "Mandatory Equipment or Software Purchase",
@@ -55,7 +66,7 @@ SCAM_RULES = [
         ]
     ),
     (
-        "Payment Demand",
+        "Financial Demand",
         "CRITICAL",
         50,
         "Cheque or Crypto Payment Scheme",
@@ -71,7 +82,7 @@ SCAM_RULES = [
     # 2. SUSPICIOUS COMMUNICATION CHANNELS (HIGH)
     # ----------------------------------------------------
     (
-        "Suspicious Communication",
+        "Suspicious Contact",
         "HIGH",
         30,
         "Telegram / WhatsApp-Only Recruiter",
@@ -85,7 +96,7 @@ SCAM_RULES = [
         ]
     ),
     (
-        "Suspicious Communication",
+        "Suspicious Contact",
         "HIGH",
         25,
         "Generic Free Webmail for Corporate Hiring",
@@ -99,7 +110,7 @@ SCAM_RULES = [
     # 3. STUDENT & INTERNSHIP EXPLOITATION (HIGH)
     # ----------------------------------------------------
     (
-        "Student Exploitation",
+        "Too Good To Be True",
         "HIGH",
         35,
         "Student Internship / Pocket Money Bait",
@@ -123,7 +134,7 @@ SCAM_RULES = [
         ]
     ),
     (
-        "Suspicious Application Method",
+        "Suspicious Contact",
         "HIGH",
         30,
         "Informal Questionnaire Application Template",
@@ -139,7 +150,7 @@ SCAM_RULES = [
     # 4. UNREALISTIC OFFERS & COMPENSATION (HIGH)
     # ----------------------------------------------------
     (
-        "Unrealistic Offer",
+        "Too Good To Be True",
         "HIGH",
         30,
         "Exorbitant Pay for Low-Skill Work",
@@ -158,7 +169,7 @@ SCAM_RULES = [
     # 5. FAKE URGENCY & PRESSURE TACTICS (HIGH / MEDIUM)
     # ----------------------------------------------------
     (
-        "Fake Urgency",
+        "Urgency / Pressure",
         "HIGH",
         25,
         "No Interview or Instant Selection",
@@ -170,7 +181,7 @@ SCAM_RULES = [
         ]
     ),
     (
-        "Fake Urgency",
+        "Urgency / Pressure",
         "MEDIUM",
         15,
         "Artificial Urgency / Pressure Tactics",
@@ -182,20 +193,50 @@ SCAM_RULES = [
     ),
 
     # ----------------------------------------------------
-    # 6. SENSITIVE PERSONAL DATA HARVESTING (CRITICAL)
+    # 6. SENSITIVE PERSONAL DATA HARVESTING & OTP THEFT (CRITICAL)
     # ----------------------------------------------------
     (
-        "Identity Harvesting",
+        "Identity Theft",
         "CRITICAL",
         45,
-        "Premature Sensitive Identity Request",
+        "Premature Sensitive Identity Request (Aadhaar / PAN / Bank)",
         "Asking for national IDs (Aadhaar, PAN, SSN) or banking credentials before a formal interview or contract is an identity theft risk.",
         [
-            r"\b(?:send|submit|share)\s+(?:your\s+)?(?:aadhaar|pan\s+card|social\s+security|ssn|bank\s+account\s+details|debit\s+card|otp)\b",
+            r"\b(?:send|submit|share)\s+(?:your\s+)?(?:aadhaar|pan\s+card|social\s+security|ssn|bank\s+account\s+details|debit\s+card)\b",
+            r"(?:send|upload|submit|share|provide|attach|forward|email|whatsapp)\s.{0,25}(?:aadhaar|aadhar|adhar|pan\s*card|pan\s*number|passport\s*copy|bank\s*(?:account|details|statement)|account\s*number|ifsc)",
+            r"(?:ആധാർ\s*(?:കൊണ്ടുവരൂ|അയക്കൂ|ഷെയർ|നൽകൂ|കോപ്പി)|ബാങ്ക്\s*(?:അക്കൗണ്ട്|ഡീറ്റെയിൽസ്)\s*(?:അയക്കൂ|നൽകൂ|ഷെയർ)|പാൻ\s*(?:കാർഡ്\s*)?(?:അയക്കൂ|ഷെയർ|നൽകൂ)|ഐഡി\s*(?:പ്രൂഫ്\s*)?(?:അയക്കൂ|നൽകൂ))",
+            r"(?:आधार\s*(?:कार्ड\s*)?(?:भेजें|शेयर|दें|अपलोड)|पैन\s*(?:कार्ड\s*)?(?:भेजें|शेयर|दें)|बैंक\s*(?:विवरण|डिटेल)\s*(?:भेजें|दें|शेयर))",
+            r"(?:aadhaar\s*(?:bhejo|send|share|de|upload|submit)|pan\s*(?:bhejo|card\s*de|share|upload)|bank\s*details\s*(?:bhejo|share|de|send)|aadhar\s*card\s*(?:ka\s*photo|copy)\s*(?:bhejo|send|do|upload))",
             r"\b(?:upload|provide)\s+(?:scanned\s+copy\s+of\s+)?(?:passport|voter\s+id)\s+(?:for\s+shortlisting|to\s+apply)\b",
         ]
     ),
+    (
+        "Identity Theft",
+        "CRITICAL",
+        50,
+        "OTP Theft / Credential Hijacking",
+        "Recruiters never request one-time passwords (OTP). Any request to share OTP indicates an active financial hijacking attempt.",
+        [
+            r"(?:share|send|give|bata|batao|bhejo|പറഞ്ഞ|ഷെയർ)\s.{0,20}\botp\b",
+            r"\botp\s*(?:code|verification)?\s*[:\-]?\s*\d{4,6}\b",
+            r"\botp\s.{0,20}(?:share|send|verify|confirm|enter)\b",
+        ]
+    ),
+    (
+        "Financial Demand",
+        "CRITICAL",
+        50,
+        "Multilingual Fee Demand (Malayalam / Hindi / Hinglish)",
+        "Demanding upfront registration charges in native regional languages (Malayalam, Hindi, Hinglish) is an urgent scam indicator.",
+        [
+            r"(?:രജിസ്ട്രേഷൻ\s*ഫീസ്|ഫീസ്\s*അടക്കണം|അഡ്വാൻസ്\s*(?:അടക്കണം|തരണം|നൽകണം)|ഡിപ്പോസിറ്റ്\s*(?:അടക്കണം|ആദ്യം)|പണം\s*(?:അയക്കണം|തരണം|ട്രാൻസ്ഫർ)|ആദ്യം\s*(?:അടക്കണം|പണം)|ഫീ\s*(?:അടക്കണം|ഉണ്ട്))",
+            r"(?:रजिस्ट्रेशन\s*फीस|एडवांस\s*(?:दे|जमा)|फीस\s*(?:दें|जमा\s*करें|भेजें)|पैसे\s*(?:भेजो|ट्रांसफर|दो)|डिपॉजिट\s*(?:जमा|दें)|पंजीकरण\s*शुल्क)",
+            r"(?:paise\s*(?:de|bhejo|do|transfer|bhej)|paisa\s*(?:lagega|chahiye|dena|jama)|fees?\s*(?:deni|pay|bharna|submit)|registration\s*(?:ka\s*)?paisa|advance\s*dena\s*(?:hoga|padega|hai))",
+            r"(?:pay|send|transfer)\s.{0,30}@(?:okicici|oksbi|okaxis|okhdfc|ybl|upi|paytm|gpay|phonepe)\b",
+        ]
+    ),
 ]
+
 
 class RuleEngine:
     """
@@ -204,8 +245,9 @@ class RuleEngine:
     """
 
     def __init__(self):
-        # Precompile regex rules for maximum performance
         self.compiled_rules = []
+
+        # 1. Compile SCAM_RULES
         for category, severity, penalty, title, explanation, patterns in SCAM_RULES:
             compiled_patterns = [re.compile(p, re.IGNORECASE) for p in patterns]
             self.compiled_rules.append({
@@ -214,42 +256,74 @@ class RuleEngine:
                 "penalty": penalty,
                 "title": title,
                 "explanation": explanation,
-                "patterns": compiled_patterns
+                "patterns": compiled_patterns,
             })
+
+        # 2. Compile patterns from patterns/rules.yaml if present
+        if os.path.exists(PATTERNS_FILE):
+            try:
+                with open(PATTERNS_FILE, encoding="utf-8") as f:
+                    yaml_rules = yaml.safe_load(f) or []
+                for yr in yaml_rules:
+                    cat = yr.get("category", "General")
+                    sev = yr.get("severity", "MEDIUM")
+                    pen = {"CRITICAL": 45, "HIGH": 25, "MEDIUM": 15, "LOW": 5}.get(sev, 15)
+                    title = yr.get("title") or yr.get("description") or f"{cat} Rule"
+                    exp = yr.get("description", title)
+                    regex_str = yr.get("regex", "")
+                    if regex_str:
+                        compiled = re.compile(regex_str, re.IGNORECASE | re.DOTALL)
+                        self.compiled_rules.append({
+                            "category": cat,
+                            "severity": sev,
+                            "penalty": pen,
+                            "title": title,
+                            "explanation": exp,
+                            "patterns": [compiled],
+                        })
+            except Exception as e:
+                print(f"Warning: Failed to load extra rules from {PATTERNS_FILE}: {e}")
 
     def analyze(self, text: str) -> Dict[str, Any]:
         """
-        Executes all heuristic checks on input text.
-        Returns:
-            - red_flags: List of RedFlag objects
-            - total_penalty: Accumulated penalty points (capped at 100)
-            - highlighted_spans: Non-overlapping sorted spans for UI rendering
+        Executes all heuristic checks on input text with normalization offset mapping.
         """
         if not text or not text.strip():
             return {
                 "red_flags": [],
+                "flag_count": 0,
                 "total_penalty": 0,
                 "highlighted_spans": [],
                 "summary": "No text provided for analysis."
             }
+
+        norm_text, offset_map = normalize_with_mapping(text)
 
         detected_flags: List[RedFlag] = []
         matched_ranges = []
 
         for rule in self.compiled_rules:
             for pattern in rule["patterns"]:
-                for match in pattern.finditer(text):
-                    start, end = match.span()
-                    matched_text = text[start:end]
+                # Match against normalized text
+                for match in pattern.finditer(norm_text):
+                    norm_start = match.start()
+                    norm_end = match.end() - 1
 
-                    # Filter out short or trivial matches
-                    if len(matched_text.strip()) < 3:
+                    if norm_start > norm_end:
                         continue
 
-                    # Check for direct overlap with already recorded flag of same title
+                    # Map back to original indices
+                    orig_start = offset_map[norm_start] if norm_start < len(offset_map) else match.start()
+                    orig_end = (offset_map[norm_end] + 1) if norm_end < len(offset_map) else match.end()
+                    matched_text = text[orig_start:orig_end]
+
+                    if len(matched_text.strip()) < 2:
+                        continue
+
+                    # De-duplicate flags with same title in close proximity
                     is_duplicate = False
                     for existing in detected_flags:
-                        if existing.title == rule["title"] and abs(existing.start - start) < 15:
+                        if existing.title == rule["title"] and abs(existing.start - orig_start) < 20:
                             is_duplicate = True
                             break
 
@@ -261,23 +335,19 @@ class RuleEngine:
                             title=rule["title"],
                             explanation=rule["explanation"],
                             matched_text=matched_text,
-                            start=start,
-                            end=end
+                            start=orig_start,
+                            end=orig_end,
                         )
                         detected_flags.append(flag)
-                        matched_ranges.append((start, end, rule["severity"]))
+                        matched_ranges.append((orig_start, orig_end, rule["severity"]))
 
-        # Calculate penalty score
-        # Using soft saturation curve: highest severity dominates + diminishing marginal penalties
         if not detected_flags:
             total_penalty = 0
         else:
             base_penalty = max(f.penalty for f in detected_flags)
             extra_penalty = sum(f.penalty for f in detected_flags) - base_penalty
-            # Diminishing returns on additional penalties
             total_penalty = min(100, int(base_penalty + (extra_penalty * 0.4)))
 
-        # Consolidate overlapping spans for clean UI highlighting
         highlighted_spans = self._merge_spans(matched_ranges)
 
         return {
@@ -287,23 +357,22 @@ class RuleEngine:
             "highlighted_spans": highlighted_spans,
         }
 
+    def evaluate(self, text: str) -> List[Dict[str, Any]]:
+        """Alias returning just the list of red flags."""
+        return self.analyze(text)["red_flags"]
+
     def _merge_spans(self, spans: List[tuple]) -> List[Dict[str, Any]]:
-        """
-        Merges adjacent or overlapping spans for safe frontend rendering.
-        """
         if not spans:
             return []
 
-        # Sort by start index
         sorted_spans = sorted(spans, key=lambda x: (x[0], x[1]))
         merged = []
-
         severity_rank = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
 
         curr_start, curr_end, curr_sev = sorted_spans[0]
 
         for start, end, sev in sorted_spans[1:]:
-            if start <= curr_end:  # Overlap or contiguous
+            if start <= curr_end:
                 curr_end = max(curr_end, end)
                 if severity_rank.get(sev, 1) > severity_rank.get(curr_sev, 1):
                     curr_sev = sev
@@ -313,3 +382,11 @@ class RuleEngine:
 
         merged.append({"start": curr_start, "end": curr_end, "severity": curr_sev})
         return merged
+
+
+_RULE_ENGINE = RuleEngine()
+
+
+def detect_rules(text: str) -> List[Dict[str, Any]]:
+    """Convenience function matching the v2 pipeline signature."""
+    return _RULE_ENGINE.analyze(text)["red_flags"]

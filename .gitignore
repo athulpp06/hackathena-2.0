@@ -18,3 +18,6 @@ out/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Friend's local project folder (do not push to GitHub)
+2.0/

@@ -1,0 +1,557 @@
+# LeakedIn — Fraud Detection Rules
+# 43 rules across 8 categories, 4 severity levels, 3 languages (en/hi/ml).
+# Each rule must include test_matches and test_non_matches for automated self-tests.
+# Regex is matched against the normalizer output (lowercase, leet decoded, spaced-letters collapsed).
+
+# ──────────────────────────────────────────────────────────────────
+# CATEGORY: Financial Demand (CRITICAL)
+# ──────────────────────────────────────────────────────────────────
+
+- id: fee_registration_en
+  category: "Financial Demand"
+  severity: "CRITICAL"
+  description: "Requires candidate to pay a registration or joining fee"
+  languages: ["en", "hinglish"]
+  regex: 'registration\s*fee|joining\s*fee|pay\s+to\s+apply|pay\s+before\s+joining|pay\s+a\s+deposit'
+  test_matches:
+    - "You must pay a registration fee of Rs 3500 to proceed"
+    - "Pay joining fee before starting work"
+  test_non_matches:
+    - "No registration fee required for this position"
+    - "Background verification fees are covered by the company"
+
+- id: fee_training_en
+  category: "Financial Demand"
+  severity: "CRITICAL"
+  description: "Requires candidate to pay for training or a security deposit"
+  languages: ["en", "hinglish"]
+  regex: 'training\s*fee|security\s*deposit|upfront\s*pay(?:ment)?|advance\s*(?:pay(?:ment)?|deposit)|kit\s*(?:charge|fee|cost)'
+  test_matches:
+    - "Pay a security deposit of Rs 2000 to get the work kit"
+    - "Training fee of 500 required before starting"
+  test_non_matches:
+    - "Company provides free training to all employees"
+
+- id: fee_processing_en
+  category: "Financial Demand"
+  severity: "CRITICAL"
+  description: "Processing, application, or courier fee demand"
+  languages: ["en", "hinglish"]
+  regex: 'processing\s*fee|application\s*fee|courier\s*(?:charge|fee)|document\s*(?:charge|fee)|verification\s*(?:charge|fee)\s*(?:of\s*(?:rs|₹)|\d)'
+  test_matches:
+    - "Pay processing fee Rs 1500 via UPI"
+    - "Application fee of 300 must be paid"
+  test_non_matches:
+    - "Background verification is done at company cost"
+
+- id: transfer_fee_immediately
+  category: "Financial Demand"
+  severity: "CRITICAL"
+  description: "Instruction to transfer money immediately — allows intermediate words"
+  languages: ["en", "hinglish"]
+  regex: 'transfer\b.{0,30}\b(?:fee|amount|money|rs|₹|deposit|payment)\b|\b(?:fee|amount|money|deposit)\b.{0,30}\btransfer\b.{0,20}\bimmediately\b'
+  test_matches:
+    - "transfer registration fee of Rs 3500 immediately"
+    - "transfer the amount of 2000 immediately to confirm your slot"
+    - "fee transfer immediately required"
+  test_non_matches:
+    - "The salary will be transferred to your account on the 1st"
+    - "Please transfer your documents to HR"
+
+- id: wire_money_transfer
+  category: "Financial Demand"
+  severity: "CRITICAL"
+  description: "Requests money via wire transfer, Western Union, MoneyGram, or hawala"
+  languages: ["en", "hinglish"]
+  regex: 'western\s*union|moneygram|wire\s*transfer|hawala|money\s*order|send\s*(?:money|cash|funds)\s*(?:to|via|through|using)?'
+  test_matches:
+    - "Send money via Western Union to our agent"
+    - "Wire transfer the amount to this account"
+  test_non_matches:
+    - "Salary disbursed via NEFT bank transfer"
+
+- id: crypto_payment
+  category: "Financial Demand"
+  severity: "CRITICAL"
+  description: "Demands cryptocurrency or digital coin payment"
+  languages: ["en", "hi", "ml", "hinglish"]
+  regex: 'crypto(?:currency)?|bitcoin|btc\b|ethereum|usdt\b|binance|pay\s*in\s*(?:bitcoin|crypto|usdt)|(?:send|buy)\s*(?:\d+\s*)?(?:btc|eth|usdt)'
+  test_matches:
+    - "Send Bitcoin worth $200 as security"
+    - "Pay 0.05 BTC to activate your account"
+    - "Earn 1 BTC/month"
+  test_non_matches:
+    - "The company does not accept cryptocurrency"
+
+- id: upi_fee_demand
+  category: "Financial Demand"
+  severity: "CRITICAL"
+  description: "UPI ID provided for fee collection — scam pattern"
+  languages: ["en", "hinglish"]
+  regex: '(?:pay|send|transfer)\s.{0,40}@(?:okicici|oksbi|okaxis|okhdfc|ybl|upi|paytm|gpay|phonepe)\b|upi\s*(?:id|payment)\s*:\s*[\w.+\-]+@\w+'
+  test_matches:
+    - "Pay Rs 500 to agent@okicici as processing fee"
+    - "UPI ID: xyz123@paytm — pay 999 now"
+  test_non_matches:
+    - "We will send your salary to your UPI account"
+
+- id: fee_hinglish
+  category: "Financial Demand"
+  severity: "CRITICAL"
+  description: "Hindi transliteration fee-demand phrases (Hinglish)"
+  languages: ["hi", "hinglish"]
+  regex: 'paise\s*(?:de|bhejo|do|transfer|bhej)|paisa\s*(?:lagega|chahiye|dena|jama)|fees?\s*(?:deni|pay|bharna|submit)|registration\s*(?:ka\s*)?paisa|advance\s*dena\s*(?:hoga|padega|hai)'
+  test_matches:
+    - "Rs 2000 paise bhejo registration ke liye"
+    - "Advance dena hoga joining ke pahle"
+  test_non_matches:
+    - "Apni salary paise mein milegi"
+
+- id: fee_malayalam_script
+  category: "Financial Demand"
+  severity: "CRITICAL"
+  description: "Malayalam-script fee-demand keywords (native text)"
+  languages: ["ml"]
+  regex: 'രജിസ്ട്രേഷൻ\s*ഫീസ്|ഫീസ്\s*അടക്കണം|അഡ്വാൻസ്\s*(?:അടക്കണം|തരണം|നൽകണം)|ഡിപ്പോസിറ്റ്\s*(?:അടക്കണം|ആദ്യം)|പണം\s*(?:അയക്കണം|തരണം|ട്രാൻസ്ഫർ)|ആദ്യം\s*(?:അടക്കണം|പണം)|ഫീ\s*(?:അടക്കണം|ഉണ്ട്)'
+  test_matches:
+    - "രജിസ്ട്രേഷൻ ഫീസ് 1500 രൂപ അടക്കണം"
+    - "അഡ്വാൻസ് ആദ്യം അടക്കണം"
+    - "1500 രൂപ അഡ്വാൻസ് ആദ്യം അടക്കണം"
+  test_non_matches:
+    - "ശമ്പളം ബാങ്ക് അക്കൗണ്ടിൽ ക്രെഡിറ്റ് ചെയ്യും"
+
+- id: fee_hindi_script
+  category: "Financial Demand"
+  severity: "CRITICAL"
+  description: "Devanagari-script fee-demand phrases (native Hindi)"
+  languages: ["hi"]
+  regex: 'रजिस्ट्रेशन\s*फीस|एडवांस\s*(?:दे|जमा)|फीस\s*(?:दें|जमा\s*करें|भेजें)|पैसे\s*(?:भेजो|ट्रांसफर|दो)|डिपॉजिट\s*(?:जमा|दें)|पंजीकरण\s*शुल्क'
+  test_matches:
+    - "रजिस्ट्रेशन फीस 2000 रुपये जमा करें"
+    - "पैसे भेजो जल्दी"
+  test_non_matches:
+    - "वेतन आपके खाते में जमा होगा"
+
+# ──────────────────────────────────────────────────────────────────
+# CATEGORY: Identity Theft (CRITICAL)
+# ──────────────────────────────────────────────────────────────────
+
+- id: id_collection_en
+  category: "Identity Theft"
+  severity: "CRITICAL"
+  description: "Requests Aadhaar, PAN, passport, or bank details before hiring"
+  languages: ["en", "hinglish"]
+  regex: '(?:send|upload|submit|share|provide|attach|forward|email|whatsapp)\s.{0,25}(?:aadhaar|aadhar|adhar|pan\s*card|pan\s*number|passport\s*copy|bank\s*(?:account|details|statement)|account\s*number|ifsc)'
+  test_matches:
+    - "Please send your Aadhaar card copy to proceed"
+    - "Upload PAN card and bank details to our portal"
+    - "Submit passport copy to hr@gmail.com"
+  test_non_matches:
+    - "After joining, provide Aadhaar for company ID"
+    - "Bring bank account details on day one for payroll setup"
+
+- id: id_hinglish
+  category: "Identity Theft"
+  severity: "CRITICAL"
+  description: "Hinglish identity-document collection phrases"
+  languages: ["hi", "hinglish"]
+  regex: 'aadhaar\s*(?:bhejo|send|share|de|upload|submit)|pan\s*(?:bhejo|card\s*de|share|upload)|bank\s*details\s*(?:bhejo|share|de|send)|aadhar\s*card\s*(?:ka\s*photo|copy)\s*(?:bhejo|send|do|upload)'
+  test_matches:
+    - "Aadhaar bhejo jaldi"
+    - "PAN card de do HR ko"
+  test_non_matches:
+    - "Aadhaar aur PAN joining ke time lana"
+
+- id: id_malayalam_script
+  category: "Identity Theft"
+  severity: "CRITICAL"
+  description: "Malayalam-script identity document requests"
+  languages: ["ml"]
+  regex: 'ആധാർ\s*(?:കൊണ്ടുവരൂ|അയക്കൂ|ഷെയർ|നൽകൂ|copy|കോപ്പി)|ബാങ്ക്\s*(?:അക്കൗണ്ട്|ഡീറ്റെയിൽസ്)\s*(?:അയക്കൂ|നൽകൂ|ഷെയർ)|പാൻ\s*(?:കാർഡ്\s*)?(?:അയക്കൂ|ഷെയർ|നൽകൂ)|ഐഡി\s*(?:പ്രൂഫ്\s*)?(?:അയക്കൂ|നൽകൂ)'
+  test_matches:
+    - "ആധാർ കൊണ്ടുവരൂ"
+    - "ബാങ്ക് ഡീറ്റെയിൽസ് അയക്കൂ"
+  test_non_matches:
+    - "ജോയിനിംഗ് ദിവസം ആധാർ കൊണ്ടുവരൂ"
+
+- id: id_hindi_script
+  category: "Identity Theft"
+  severity: "CRITICAL"
+  description: "Devanagari-script identity document requests"
+  languages: ["hi"]
+  regex: 'आधार\s*(?:कार्ड\s*)?(?:भेजें|शेयर|दें|अपलोड)|पैन\s*(?:कार्ड\s*)?(?:भेजें|शेयर|दें)|बैंक\s*(?:विवरण|डिटेल)\s*(?:भेजें|दें|शेयर)'
+  test_matches:
+    - "आधार कार्ड भेजें तुरंत"
+    - "पैन कार्ड शेयर करें"
+  test_non_matches:
+    - "जॉइनिंग के दिन आधार लाएं"
+
+- id: otp_collection
+  category: "Identity Theft"
+  severity: "CRITICAL"
+  description: "Asks for OTP, which is never needed during a legitimate job process"
+  languages: ["en", "hi", "ml", "hinglish"]
+  regex: '(?:share|send|give|bata|batao|bhejo|പറഞ്ഞ|ഷെയർ)\s.{0,20}\botp\b|otp\s.{0,20}(?:share|send|verify|confirm|enter)|otp\s*:\s*\d{4,6}'
+  test_matches:
+    - "Please share the OTP sent to your number"
+    - "OTP bhejo abhi"
+  test_non_matches:
+    - "OTP will be sent to verify your login"
+
+# ──────────────────────────────────────────────────────────────────
+# CATEGORY: Suspicious Contact (HIGH)
+# ──────────────────────────────────────────────────────────────────
+
+- id: channel_whatsapp
+  category: "Suspicious Contact"
+  severity: "HIGH"
+  description: "Uses WhatsApp as official recruitment channel"
+  languages: ["en", "hi", "ml", "hinglish"]
+  regex: 'contact\s(?:me\s)?on\s*whatsapp|(?:apply|join|register|send\s*cv|send\s*resume)\s.{0,30}whatsapp|whatsapp\s*(?:group|channel|number|no\.?)\s*(?:join|click|tap|add)'
+  test_matches:
+    - "Contact me on WhatsApp to apply"
+    - "Join our WhatsApp group for job updates"
+  test_non_matches:
+    - "Interview will be conducted via WhatsApp video call"
+    - "We will send updates on WhatsApp"
+
+- id: channel_telegram
+  category: "Suspicious Contact"
+  severity: "HIGH"
+  description: "Uses Telegram groups or channels as official recruitment channel"
+  languages: ["en", "hi", "ml", "hinglish"]
+  regex: '(?:join|click|add)\s.{0,20}telegram\s*(?:group|channel|bot)|telegram\s*(?:group|channel)\s*(?:link|invite|join)|@\w+\s*(?:telegram|tg)\b'
+  test_matches:
+    - "Join our Telegram group @earnmoney2024"
+    - "Click to join the Telegram channel for jobs"
+  test_non_matches:
+    - "Our HR team is available on Telegram for queries"
+
+- id: free_email_recruiter
+  category: "Suspicious Contact"
+  severity: "HIGH"
+  description: "Recruiter uses personal free-email domain instead of corporate email"
+  languages: ["en", "hi", "ml", "hinglish"]
+  regex: '(?:hr|recruit|hiring|jobs?|career|apply|contact|send\s*(?:your\s*)?(?:cv|resume|documents?))\s*@(?:gmail|yahoo|hotmail|outlook|rediffmail|ymail|live)\.'
+  test_matches:
+    - "hr-amazon@gmail.com — send your resume"
+    - "Send CV to hiring@yahoo.com"
+  test_non_matches:
+    - "Apply at careers@infosys.com"
+    - "Contact hr@tcs.com for queries"
+
+- id: task_like_video_scam
+  category: "Financial Demand"
+  severity: "CRITICAL"
+  description: "Task/gig scam — pay to like YouTube videos, follow social accounts for pay. Unambiguous fraud."
+  languages: ["en", "hinglish"]
+  regex: '(?:like|subscribe|follow|comment)\s.{0,30}(?:youtube|instagram|twitter|facebook)\s.{0,30}(?:earn|paid|payment|get\s*money|money\s*credited)|earn\s*by\s*(?:liking|subscribing|following)\s*(?:videos?|posts?)'
+  test_matches:
+    - "Like YouTube videos and earn Rs 500 per day"
+    - "Subscribe to channels and get paid Rs 200 per task"
+  test_non_matches:
+    - "Social media marketing role managing YouTube channel"
+
+
+# ──────────────────────────────────────────────────────────────────
+# CATEGORY: Urgency / Pressure (HIGH)
+# ──────────────────────────────────────────────────────────────────
+
+- id: urgency_limited_time
+  category: "Urgency / Pressure"
+  severity: "HIGH"
+  description: "Artificial scarcity — limited seats, time-limited offer"
+  languages: ["en", "hi", "ml", "hinglish"]
+  regex: 'limited\s*(?:seats?|slots?|openings?|positions?|time)|offer\s*(?:valid\s*for\s*\d+\s*(?:hours?|hrs?|days?)|expires?\s*(?:today|tomorrow|in\s*\d))|today\s*only\s*offer|act\s*(?:now|fast|quickly)\s*(?:to\s*(?:secure|grab|get))?'
+  test_matches:
+    - "Limited seats available — apply now"
+    - "Offer valid for 24 hours only"
+  test_non_matches:
+    - "We have limited openings at our Bangalore office this quarter"
+
+- id: urgency_apply_now
+  category: "Urgency / Pressure"
+  severity: "HIGH"
+  description: "High-pressure immediate action demand"
+  languages: ["en", "hinglish"]
+  regex: 'apply\s*(?:immediately|right\s*now|asap|today|urgently)|respond\s*(?:immediately|asap|urgently|within\s*\d+\s*(?:min|hour|hr))|confirm\s*(?:immediately|right\s*now|asap)\s*or\s*(?:lose|slot|opportunity)'
+  test_matches:
+    - "Apply immediately to secure your spot"
+    - "Respond within 30 minutes or lose the opportunity"
+  test_non_matches:
+    - "Apply by October 15 to be considered for the role"
+
+- id: urgency_hinglish
+  category: "Urgency / Pressure"
+  severity: "HIGH"
+  description: "Hinglish urgency phrases"
+  languages: ["hi", "hinglish"]
+  regex: 'jaldi\s*(?:apply|karo|bhejo|contact)|abhi\s*(?:apply|contact|karo|join)|kal\s*tak\s*(?:batao|bata|confirm)\s*karo|sirf\s*(?:\d+|ek|do)\s*(?:seat|jagah|opening)'
+  test_matches:
+    - "Jaldi apply karo sirf 3 seats bache hain"
+    - "Abhi contact karo"
+  test_non_matches:
+    - "Kisi bhi query ke liye humse contact karo"
+
+- id: urgency_malayalam_script
+  category: "Urgency / Pressure"
+  severity: "HIGH"
+  description: "Malayalam-script urgency phrases"
+  languages: ["ml"]
+  regex: 'ഇപ്പോൾ\s*(?:apply|ബന്ധപ്പെടൂ|register)|ഇന്ന്\s*(?:apply|തന്നെ|register|ബന്ധപ്പെടൂ)|സീറ്റ്\s*(?:കുറവാണ്|ലിമിറ്റഡ്)|ഉടൻ\s*(?:ബന്ധപ്പെടൂ|reply|apply)'
+  test_matches:
+    - "ഇപ്പോൾ ബന്ധപ്പെടൂ, സീറ്റ് കുറവാണ്"
+    - "ഉടൻ reply ചെയ്യൂ"
+  test_non_matches:
+    - "ഇന്ന് ഇന്റർവ്യൂ ഉണ്ടെന്ന് reminder"
+
+- id: urgency_hindi_script
+  category: "Urgency / Pressure"
+  severity: "HIGH"
+  description: "Devanagari-script urgency phrases"
+  languages: ["hi"]
+  regex: 'तुरंत\s*(?:आवेदन|contact|reply|जमा)|जल्दी\s*(?:apply|करें|संपर्क)|सीमित\s*(?:सीटें|अवसर)|आज\s*ही\s*(?:apply|संपर्क|confirm)'
+  test_matches:
+    - "तुरंत आवेदन करें, सीमित सीटें हैं"
+    - "जल्दी apply करें"
+  test_non_matches:
+    - "15 अक्टूबर तक आवेदन करें"
+
+# ──────────────────────────────────────────────────────────────────
+# CATEGORY: Too Good To Be True (HIGH)
+# ──────────────────────────────────────────────────────────────────
+
+- id: unrealistic_salary_en
+  category: "Too Good To Be True"
+  severity: "HIGH"
+  description: "Unrealistically high salary for entry-level or unskilled roles"
+  languages: ["en", "hinglish"]
+  regex: 'earn\s+(?:upto?\s*)?(?:rs\.?\s*)?(?:5[0-9]|[6-9]\d|\d{3,})[,\d]*\s*(?:per\s*day|\/day|daily)|earn\s+\S+\s+per\s+(?:week|day)|guaranteed\s+(?:income|salary|earning)|no\s+experience\s+(?:needed|required)\b'
+  test_matches:
+    - "Earn Rs 5000 per day working from home"
+    - "No experience required, guaranteed income"
+  test_non_matches:
+    - "Software Engineer salary 8-12 LPA. 3 years experience required."
+    - "No experience required for our internship program — training provided"
+
+- id: unrealistic_salary_ml
+  category: "Too Good To Be True"
+  severity: "HIGH"
+  description: "Malayalam-script unrealistic earnings promise"
+  languages: ["ml"]
+  regex: 'ദിവസം\s*\d+\s*(?:രൂപ|₹)\s*(?:സമ്പാദിക്കാം|കിട്ടും|earn|ലഭിക്കും)|ഒരു\s*ദിവസം\s*\d+\s*(?:രൂപ|₹)|(?:ആയിരം|ലക്ഷം)\s*(?:രൂപ|₹)\s*(?:കിട്ടും|ഉണ്ടാക്കാം|earn)'
+  test_matches:
+    - "ദിവസം 3000 രൂപ സമ്പാദിക്കാം"
+    - "ഒരു ദിവസം 5000 രൂപ കിട്ടും"
+  test_non_matches:
+    - "മാസ ശമ്പളം 25000 രൂപ ആണ്"
+
+- id: unrealistic_salary_hi
+  category: "Too Good To Be True"
+  severity: "HIGH"
+  description: "Hindi unrealistic earnings promises"
+  languages: ["hi"]
+  regex: 'रोज़\s*(?:कमाएं|कमाओ)\s*(?:₹|\d)|घर\s*(?:बैठे|से)\s*(?:₹|\d+)\s*(?:कमाएं|कमाओ|महीना)|बिना\s*(?:अनुभव|experience)\s*(?:के\s*)?(?:₹|\d+\s*(?:हज़ार|लाख))'
+  test_matches:
+    - "रोज़ ₹3000 कमाएं घर बैठे"
+    - "बिना अनुभव के ₹50000 महीना"
+  test_non_matches:
+    - "वेतन ₹30,000 प्रति माह अनुभव के अनुसार"
+
+- id: guaranteed_job
+  category: "Too Good To Be True"
+  severity: "HIGH"
+  description: "Guarantees placement, selection, or income — illegitimate claim"
+  languages: ["en", "hi", "ml", "hinglish"]
+  regex: '100\s*%\s*(?:placement|job|guaranteed|selection|income)|guaranteed\s*(?:job|placement|selection|income|salary|work)|pakka\s*(?:job|kaam|selection)|confirm\s*selection'
+  test_matches:
+    - "100% placement guaranteed"
+    - "Guaranteed job in 7 days"
+    - "Pakka selection ho gaya aapka"
+  test_non_matches:
+    - "Our placement cell helps students find jobs — no guarantee of placement"
+
+- id: no_interview
+  category: "Too Good To Be True"
+  severity: "MEDIUM"
+  description: "Claims job offer is given without any interview"
+  languages: ["en", "hinglish"]
+  regex: 'no\s*interview(?:\s*required|\s*needed)?|without\s*(?:interview|test|exam)|direct\s*(?:joining|selection)\s*(?:without|no)'
+  test_matches:
+    - "No interview required — direct joining"
+    - "Selected without interview"
+  test_non_matches:
+    - "Interview will be conducted via Zoom"
+
+# ──────────────────────────────────────────────────────────────────
+# CATEGORY: Work-from-Home Scam (HIGH)
+# ──────────────────────────────────────────────────────────────────
+
+- id: wfh_earn_combo
+  category: "Work-from-Home Scam"
+  severity: "HIGH"
+  description: "Work-from-home + earn combination — classic scam pattern"
+  languages: ["en", "hinglish"]
+  regex: '(?:work|job|kaam)\s*from\s*home.{0,60}(?:earn|income|₹|rs\.?\s*\d|daily\s*pay|paisa|paise)'
+  test_matches:
+    - "Work from home and earn Rs 10000 per day"
+    - "Kaam from home — earn daily income"
+  test_non_matches:
+    - "Remote work from home for software engineer role, salary as per industry standard"
+
+- id: part_time_high_pay
+  category: "Work-from-Home Scam"
+  severity: "HIGH"
+  description: "Part-time work promising unusually high pay"
+  languages: ["en", "hinglish"]
+  regex: 'part[\s\-]*time.{0,50}(?:rs\.?\s*)?(?:\d{4,}|(?:thousand|lakh))\s*(?:per\s*(?:day|month|week|hr|hour)|daily|monthly)|(?:rs\.?\s*)?(?:\d{4,})\s*per\s*day.{0,30}part[\s\-]*time'
+  test_matches:
+    - "Part time job earn Rs 10000 per day"
+    - "Rs 50000 per month part-time from home"
+  test_non_matches:
+    - "Part-time data analyst role, 4 hours/day, salary negotiable"
+
+# ──────────────────────────────────────────────────────────────────
+# CATEGORY: Brand Impersonation (HIGH)
+# ──────────────────────────────────────────────────────────────────
+
+- id: impersonation_brand_email
+  category: "Brand Impersonation"
+  severity: "HIGH"
+  description: "Claims to be from a well-known company but uses free-email domain"
+  languages: ["en", "hinglish"]
+  regex: '(?:google|amazon|microsoft|tcs|infosys|wipro|accenture|deloitte|flipkart|swiggy|zomato|phonepe|razorpay|paytm|hcl|cognizant|capgemini|ibm|meta|facebook|apple|tesla|naukri|byju|ola|uber|myntra)\b.{0,60}@(?:gmail|yahoo|hotmail|outlook|rediffmail|live)\.'
+  test_matches:
+    - "Amazon India recruiter: hr-amazon@gmail.com"
+    - "TCS job alert from hr-tcs@yahoo.com"
+  test_non_matches:
+    - "Apply at careers@amazon.jobs"
+
+- id: impersonation_offer_letter
+  category: "Brand Impersonation"
+  severity: "MEDIUM"
+  description: "Unsolicited offer letter claiming to be from a known company"
+  languages: ["en"]
+  regex: '(?:congratulations|you\s*(?:are|have\s*been)\s*(?:selected|hired|shortlisted)).{0,80}(?:google|amazon|microsoft|tcs|infosys|wipro|accenture|deloitte|hcl|cognizant|ibm|flipkart)'
+  test_matches:
+    - "Congratulations! You are selected by Amazon India for the WFH role"
+    - "You have been hired by TCS — pay registration fee"
+  test_non_matches:
+    - "Congratulations on reaching the final round at Infosys — interview tomorrow"
+
+# ──────────────────────────────────────────────────────────────────
+# CATEGORY: Document / KYC Fraud (HIGH)
+# ──────────────────────────────────────────────────────────────────
+
+- id: kyc_before_joining
+  category: "Document / KYC Fraud"
+  severity: "HIGH"
+  description: "KYC or document verification requested before formal employment"
+  languages: ["en", "hinglish"]
+  regex: '(?:complete|do|submit|upload)\s.{0,20}(?:kyc|verification)\s.{0,30}(?:fee|charge|rs\.?\s*\d|₹|\d+\s*rupee)|kyc\s*(?:fee|charge|amount|₹|rs)|kyc\s*(?:required|mandatory)\s*(?:to\s*(?:start|begin|activate)|before)'
+  test_matches:
+    - "Complete KYC verification — fee Rs 200"
+    - "KYC required before starting work from home"
+  test_non_matches:
+    - "KYC documents required for company ID creation on day one"
+
+- id: fake_offer_letter
+  category: "Document / KYC Fraud"
+  severity: "MEDIUM"
+  description: "Offers appointment letter via WhatsApp/Telegram after fee payment"
+  languages: ["en", "hinglish"]
+  regex: '(?:appointment|offer|joining)\s*letter\s.{0,50}(?:whatsapp|telegram|gmail|yahoo)|(?:appointment|offer)\s*letter\s*(?:after|once)\s*(?:payment|fee|transfer|deposit)'
+  test_matches:
+    - "Appointment letter will be sent on WhatsApp after payment"
+    - "Offer letter shared via Telegram once fee is paid"
+  test_non_matches:
+    - "Offer letter will be couriered to your address"
+
+# ──────────────────────────────────────────────────────────────────
+# CATEGORY: Medium-Severity Flags (MEDIUM)
+# ──────────────────────────────────────────────────────────────────
+
+- id: personal_number_publish
+  category: "Suspicious Contact"
+  severity: "MEDIUM"
+  description: "Recruiter publishes personal phone number (not a company extension)"
+  languages: ["en", "hinglish"]
+  regex: '(?:contact|call|whatsapp|message)\s.{0,30}(?:\+91|91)?[6-9]\d{9}\b'
+  test_matches:
+    - "Contact on +91 9876543210 for more details"
+    - "WhatsApp me at 8765432109"
+  test_non_matches:
+    - "Company switchboard: +91-80-12345678"
+
+- id: obfuscated_url
+  category: "Suspicious Contact"
+  severity: "MEDIUM"
+  description: "Uses URL shorteners to hide destination"
+  languages: ["en", "hi", "ml", "hinglish"]
+  regex: '(?:bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly|rb\.gy|cutt\.ly|is\.gd|tiny\.cc|shorturl\.at)/\S+'
+  test_matches:
+    - "Apply here: bit.ly/earn2024"
+    - "Click tinyurl.com/job99"
+  test_non_matches:
+    - "Apply at careers.google.com/jobs"
+
+- id: hinglish_home_job
+  category: "Work-from-Home Scam"
+  severity: "MEDIUM"
+  description: "Hinglish 'ghar baithe kaam' (work from home) combined with earnings"
+  languages: ["hi", "hinglish"]
+  regex: 'ghar\s*(?:baithe?|se)\s*(?:kaam|job|paise|paisa|kamai|earn|income)|ghar\s*baithe?\s*\d+\s*(?:hazaar|lakh|rs|₹)'
+  test_matches:
+    - "Ghar baithe kaam karo Rs 15000 weekly"
+    - "Ghar se job, daily earning 2000 Rs"
+  test_non_matches:
+    - "Ghar se kaam karne ki facility hai is company mein"
+
+- id: malayalam_home_job
+  category: "Work-from-Home Scam"
+  severity: "MEDIUM"
+  description: "Malayalam 'home job' advertisements with earnings"
+  languages: ["ml"]
+  regex: 'ഹോം\s*(?:ജോബ്|കാം|job|work)|വീട്ടിൽ\s*(?:ഇരുന്ന്|നിന്ന്)\s*(?:ജോലി|job|earn|സമ്പാദിക്കാം)|വീട്ടിൽ\s*(?:ജോലി|kaam)'
+  test_matches:
+    - "ഹോം ജോബ് ഉണ്ട്! ദിവസം 3000 രൂപ സമ്പാദിക്കാം"
+    - "വീട്ടിൽ ഇരുന്ന് ജോലി ചെയ്ത് earn ചെയ്യൂ"
+  test_non_matches:
+    - "ഈ ഒഴിവ് ഫുൾ ടൈം WFH ആണ്"
+
+- id: lottery_winner
+  category: "Too Good To Be True"
+  severity: "MEDIUM"
+  description: "Lottery or prize-winner framing used as job bait"
+  languages: ["en", "hinglish"]
+  regex: 'you\s*(?:have\s*)?(?:won|win|been\s*selected)\s.{0,30}(?:prize|lottery|lucky|reward)|(?:lucky\s*draw|lottery\s*winner)\s.{0,20}job'
+  test_matches:
+    - "You have won a prize — lucky draw selected for the job"
+    - "Lottery winner gets Rs 50000 and a job offer"
+  test_non_matches:
+    - "You have been selected for the final interview round"
+
+- id: referral_mlm_pyramid
+  category: "Too Good To Be True"
+  severity: "MEDIUM"
+  description: "Multi-level referral or MLM structure — pyramid scheme indicator"
+  languages: ["en", "hinglish"]
+  regex: '(?:refer|invite)\s.{0,20}(?:and|to)\s*earn|referral\s*(?:bonus|commission|income)\s*per\s*(?:person|member|head|referral)|earn\s*for\s*every\s*(?:person|member|referral)\s*you\s*(?:bring|add|refer)'
+  test_matches:
+    - "Refer friends and earn Rs 500 per person"
+    - "Referral bonus Rs 1000 for every member you bring"
+  test_non_matches:
+    - "Referral bonus program for existing employees only"
+
+- id: low_severity_generic_urgency
+  category: "Urgency / Pressure"
+  severity: "LOW"
+  description: "Mild urgency that could be legitimate — context-dependent"
+  languages: ["en"]
+  regex: 'immediate\s*(?:joining|opening|vacancy|start)|joining\s*immediately|urgent\s*(?:requirement|vacancy|opening|hiring)'
+  test_matches:
+    - "Urgent requirement — joining immediately"
+    - "Immediate joining for software developer"
+  test_non_matches:
+    - "Joining date is October 15 — please confirm"
+    - "Immediate opening for senior software engineer at our Pune office — 5 years exp required"

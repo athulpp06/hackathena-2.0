@@ -1,46 +1,138 @@
 """
-ML Inference Wrapper for LeakedIn Job Posting Scanner.
-Loads the trained TF-IDF + Classifier pipeline and exposes a clean inference API.
+ml.py - ML inference wrapper for LeakedIn fraud detector.
+
+Loads pre-trained scikit-learn Pipeline (TF-IDF + CalibratedClassifierCV)
+and provides:
+  - predict(text, ...): fraud probability + XAI top explaining n-grams
+  - get_model_metadata(): version info from models/metadata.json
+  - is_model_ready(): checks if model artifact exists and can be loaded
 """
 
-import os
-import re
-from typing import Dict, Any, Optional
+import json
+import logging
+from pathlib import Path
+from typing import Any, Optional
 
 import joblib
+import numpy as np
 
-# Path to the serialized model
-_MODEL_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "models", "job_detector_model.joblib"
-)
-_MODEL_PATH = os.path.normpath(_MODEL_PATH)
+logger = logging.getLogger(__name__)
 
-# Lazy-load the model once on first inference call (avoids startup penalty)
-_pipeline = None
+_MODEL_PATH = Path(__file__).resolve().parents[2] / "models" / "job_detector_model.joblib"
+_METADATA_PATH = Path(__file__).resolve().parents[2] / "models" / "metadata.json"
 
-
-def _load_pipeline():
-    global _pipeline
-    if _pipeline is None:
-        if not os.path.exists(_MODEL_PATH):
-            raise FileNotFoundError(
-                f"ML model not found at '{_MODEL_PATH}'. "
-                "Please run: python backend/scripts/train_pipeline.py"
-            )
-        _pipeline = joblib.load(_MODEL_PATH)
-    return _pipeline
+_model = None
+_model_loaded = False
+_feature_names: list[str] = []
+_coef: Optional[np.ndarray] = None
 
 
-def _build_combined_text(
-    title: str,
-    description: str,
-    company_profile: str = "",
-    requirements: str = "",
-    benefits: str = "",
-) -> str:
-    """Concatenates the same fields used during training."""
-    parts = [title, company_profile, description, requirements, benefits]
-    return " ".join(p.strip() for p in parts if p).lower()
+def _load_model() -> None:
+    """Load model and extract feature names + coefficients for explainability."""
+    global _model, _model_loaded, _feature_names, _coef
+
+    if _model_loaded:
+        return
+    _model_loaded = True
+
+    if not _MODEL_PATH.exists():
+        logger.warning(
+            "Model file not found at %s. ML predictions will return neutral score (0.5).",
+            _MODEL_PATH,
+        )
+        return
+
+    try:
+        _model = joblib.load(_MODEL_PATH)
+        tfidf = _model.named_steps["tfidf"]
+        _feature_names = tfidf.get_feature_names_out().tolist()
+
+        # Extract coefficients: CalibratedClassifierCV wraps base estimators
+        clf = _model.named_steps["clf"]
+        if hasattr(clf, "calibrated_classifiers_"):
+            coefs = []
+            for cc in clf.calibrated_classifiers_:
+                estimator = getattr(cc, "estimator", getattr(cc, "base_estimator", None))
+                if estimator is not None and hasattr(estimator, "coef_"):
+                    coefs.append(estimator.coef_[0])
+            if coefs:
+                _coef = np.mean(coefs, axis=0)
+            else:
+                logger.warning("Could not extract coefficients from calibrated classifier.")
+        elif hasattr(clf, "coef_"):
+            _coef = clf.coef_[0]
+        else:
+            logger.warning("Classifier does not expose coef_.")
+
+        logger.info("ML model loaded successfully from %s", _MODEL_PATH)
+    except Exception as exc:
+        logger.error("Failed to load model from %s: %s", _MODEL_PATH, exc)
+        _model = None
+
+
+def is_model_ready() -> bool:
+    """Checks whether the ML model artifact exists on disk."""
+    return _MODEL_PATH.exists()
+
+
+def _get_top_ngrams(text: str, top_n: int = 5) -> dict[str, Any]:
+    """
+    Computes top fraud-associated and legit-associated n-grams present in text.
+    Uses TF-IDF feature weights x classifier coefficients (linear XAI).
+    """
+    if _model is None or _coef is None or not _feature_names:
+        return {"top_fraud_signals": [], "top_legit_signals": []}
+
+    try:
+        tfidf = _model.named_steps["tfidf"]
+        vec = tfidf.transform([text])
+        cx = vec.tocsr()
+        nonzero_indices = cx.indices
+        nonzero_values = np.array(cx.data)
+
+        if len(nonzero_indices) == 0:
+            return {"top_fraud_signals": [], "top_legit_signals": []}
+
+        scores = nonzero_values * _coef[nonzero_indices]
+        sorted_idx = np.argsort(scores)[::-1]
+
+        fraud_signals = []
+        legit_signals = []
+        for i in sorted_idx[:top_n]:
+            if scores[i] > 0:
+                fraud_signals.append({
+                    "ngram": _feature_names[nonzero_indices[i]],
+                    "score": round(float(scores[i]), 4),
+                })
+
+        for i in sorted_idx[-top_n:][::-1]:
+            if scores[i] < 0:
+                legit_signals.append({
+                    "ngram": _feature_names[nonzero_indices[i]],
+                    "score": round(float(abs(scores[i])), 4),
+                })
+
+        return {
+            "top_fraud_signals": fraud_signals[:top_n],
+            "top_legit_signals": legit_signals[:top_n],
+        }
+    except Exception as exc:
+        logger.warning("Failed to compute n-gram explanation: %s", exc)
+        return {"top_fraud_signals": [], "top_legit_signals": []}
+
+
+def get_model_metadata() -> dict[str, Any]:
+    """Return training metadata from models/metadata.json if available."""
+    if _METADATA_PATH.exists():
+        try:
+            with open(_METADATA_PATH, encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {
+        "version": "2.0.0",
+        "description": "TF-IDF + CalibratedClassifierCV Fraud Detector",
+    }
 
 
 def predict(
@@ -49,107 +141,76 @@ def predict(
     company_profile: str = "",
     requirements: str = "",
     benefits: str = "",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
-    Runs ML inference on a job posting.
+    Run ML inference on job posting text.
 
-    Parameters
-    ----------
-    text         : Full raw job posting text (primary input).
-    title        : Optional extracted job title.
-    company_profile : Optional company description text.
-    requirements : Optional requirements section.
-    benefits     : Optional benefits / compensation section.
-
-    Returns
-    -------
-    Dict with keys:
-        - ml_fraud_probability (float 0.0-1.0)  : Model confidence that this is fraudulent.
-        - ml_score_pct (int 0-100)              : Percentage rounded for display.
-        - ml_verdict (str)                       : Human-readable ML verdict label.
-        - ml_confidence_level (str)              : Confidence tier: HIGH/MEDIUM/LOW.
-        - top_scam_signals (list[str])           : Up to 5 top scam-correlated n-grams found in text.
-        - model_version (str)                    : Identifier for reproducibility.
+    Supports optional structured breakdowns (title, company_profile, etc.)
+    and returns both legacy and v2 keys for maximum compatibility.
     """
-    pipeline = _load_pipeline()
+    _load_model()
 
-    # Prefer structured breakdown; fall back to raw text
+    # Build combined text if structured fields provided
+    full_text = text
     if title or company_profile or requirements or benefits:
-        combined = _build_combined_text(title, text, company_profile, requirements, benefits)
-    else:
-        combined = text.lower().strip()
+        parts = [title, company_profile, text, requirements, benefits]
+        full_text = " ".join(p.strip() for p in parts if p.strip())
 
-    prob = float(pipeline.predict_proba([combined])[0, 1])
-    pct = round(prob * 100)
+    if _model is None:
+        return {
+            "fraud_probability": 0.5,
+            "ml_fraud_probability": 0.5,
+            "is_fraud": False,
+            "ml_score_pct": 50,
+            "ml_verdict": "Indeterminate (Model Unavailable)",
+            "ml_confidence_level": "LOW",
+            "top_scam_signals": [],
+            "model_explanation": {"top_fraud_signals": [], "top_legit_signals": []},
+            "model_version": "unavailable",
+        }
 
-    # Confidence tiers based on distance from the decision boundary (0.5)
-    distance = abs(prob - 0.5)
-    if distance >= 0.35:
-        confidence = "HIGH"
-    elif distance >= 0.15:
-        confidence = "MEDIUM"
-    else:
-        confidence = "LOW"
-
-    # Verdict label
-    if prob >= 0.75:
-        verdict = "ML Model Suspects Fraudulent Posting"
-    elif prob >= 0.45:
-        verdict = "ML Model Detects Suspicious Patterns"
-    elif prob >= 0.20:
-        verdict = "ML Model Finds Minor Anomalies"
-    else:
-        verdict = "ML Model Suggests Legitimate Posting"
-
-    # Extract top correlated scam n-grams found in the actual input text
-    top_signals = _extract_top_signals(combined, pipeline)
-
-    return {
-        "ml_fraud_probability": round(prob, 4),
-        "ml_score_pct": pct,
-        "ml_verdict": verdict,
-        "ml_confidence_level": confidence,
-        "top_scam_signals": top_signals,
-        "model_version": "tfidf-logreg-v2.0",
-    }
-
-
-# ── Internal helpers ──────────────────────────────────────────────────────────
-
-_SCAM_FEATURE_WORDS = [
-    # Financial scam indicators and upfront payment demands
-    "registration fee", "security deposit", "training fee", "processing charge",
-    "wire transfer", "western union", "moneygram", "bitcoin", "crypto",
-    "just pay", "pay initially", "pay upfront", "initial payment", "initial deposit",
-    "screening fee", "portal charge", "nominal fee",
-    # Communication red flags
-    "whatsapp", "telegram", "personal email", "gmail", "yahoo",
-    # Student / internship exploitation & unrealistic claims
-    "pocket money", "free internship", "good stipend", "immediate hiring",
-    "earn weekly", "daily income", "earn per day", "no experience required",
-    "no interview", "direct selection", "urgent hiring", "spot offer",
-    "work from home typing", "data entry earn", "form filling",
-    "guaranteed income", "100 percent guaranteed", "to apply fill",
-]
-
-
-def _extract_top_signals(text: str, pipeline) -> list:
-    """
-    Finds which known scam-correlated phrases are actually present in the text.
-    Returns up to 5 matched signals for display to the user.
-    """
-    found = []
-    text_lower = text.lower()
-    for phrase in _SCAM_FEATURE_WORDS:
-        if phrase in text_lower and len(found) < 5:
-            found.append(phrase)
-    return found
-
-
-def is_model_ready() -> bool:
-    """Health-check: returns True if the model file exists and can be loaded."""
     try:
-        _load_pipeline()
-        return True
-    except Exception:
-        return False
+        prob = float(_model.predict_proba([full_text])[0][1])
+        prob_rounded = round(prob, 4)
+        explanation = _get_top_ngrams(full_text)
+        top_scam_signals = [item["ngram"] for item in explanation.get("top_fraud_signals", [])]
+
+        if prob >= 0.75:
+            verdict = "High probability of recruitment fraud"
+            confidence = "HIGH"
+        elif prob >= 0.50:
+            verdict = "Elevated fraud probability (Suspicious)"
+            confidence = "MEDIUM"
+        elif prob >= 0.25:
+            verdict = "Low fraud probability (Likely Legitimate)"
+            confidence = "MEDIUM"
+        else:
+            verdict = "Minimal fraud probability (Legitimate)"
+            confidence = "HIGH"
+
+        metadata = get_model_metadata()
+
+        return {
+            "fraud_probability": prob_rounded,
+            "ml_fraud_probability": prob_rounded,
+            "is_fraud": prob >= 0.5,
+            "ml_score_pct": int(round(prob * 100)),
+            "ml_verdict": verdict,
+            "ml_confidence_level": confidence,
+            "top_scam_signals": top_scam_signals,
+            "model_explanation": explanation,
+            "model_version": metadata.get("version", "2.0.0"),
+        }
+    except Exception as exc:
+        logger.warning("Model inference failed: %s. Returning neutral score.", exc)
+        return {
+            "fraud_probability": 0.5,
+            "ml_fraud_probability": 0.5,
+            "is_fraud": False,
+            "ml_score_pct": 50,
+            "ml_verdict": "Neutral",
+            "ml_confidence_level": "LOW",
+            "top_scam_signals": [],
+            "model_explanation": {"top_fraud_signals": [], "top_legit_signals": []},
+            "model_version": "2.0.0",
+        }

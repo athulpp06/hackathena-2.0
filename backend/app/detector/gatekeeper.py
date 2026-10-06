@@ -75,6 +75,15 @@ CONVERSATION_OR_PROMPT_MARKERS = [
     r"\b(?:hey\s+(?:bro|dude|there)|how\s+are\s+you|call\s+me|see\s+you\s+tomorrow|what\'s\s+up)\b",
 ]
 
+INDIC_RECRUITMENT_MARKERS = [
+    # Malayalam
+    r"റിക്രൂട്ട്മെന്റ്", r"ജോലി", r"ശമ്പളം", r"വരുമാനം", r"രജിസ്ട്രേഷൻ", r"വാട്സ്ആപ്പ്",
+    r"ഡാറ്റാ\s*എൻട്രി", r"വർക്ക്\s*ഫ്രം\s*ഹോം", r"സെലക്ഷൻ", r"പ്രതിഫലം", r"അടിയന്തിര",
+    # Hindi / Devanagari
+    r"भर्ती", r"नौकरी", r"वेतन", r"प्रतिदिन", r"कमाएं", r"डेटा\s*एंट्री", r"पार्ट-टाइम",
+    r"वर्क\s*फ्रॉम\s*होम", r"डायरेक्ट\s*सिलेक्शन", r"रजिस्ट्रेशन",
+]
+
 
 def _offline_classify_text(text: str) -> Dict[str, Any]:
     """
@@ -146,6 +155,7 @@ def _offline_classify_text(text: str) -> Dict[str, Any]:
     has_apply_pattern = bool(re.search(r"\b(?:to\s*apply|how\s+to\s+apply|send\s+(?:cv|resume)|apply\s+at|visit\s+http|applications?\s+accepted|portal\s+at|careers?|reach\s+our|contact\s+us)\b", cleaned))
     has_compensation = bool(re.search(r"\b(?:stipend|salary|lpa|ctc|per\s*(?:month|week|day|hr|hour|page)|\d+k\s*\/\s*month|earn\b|earning\b|commission\b|payout\b|usdt|inr|rs\.?\s*\d+)\b", cleaned))
     has_intern_pattern = bool(re.search(r"\b(?:intern(?:ship)?|pursuing\s+students?|marketing\s+intern|wfh\s+intern)\b", cleaned))
+    indic_matches = sum(1 for p in INDIC_RECRUITMENT_MARKERS if re.search(p, text))
 
     score = 0
     if role_count >= 1:
@@ -162,6 +172,10 @@ def _offline_classify_text(text: str) -> Dict[str, Any]:
         score += 2
     if has_intern_pattern:
         score += 2
+    if indic_matches >= 1:
+        score += 3
+    if indic_matches >= 2:
+        score += 3
 
     # Threshold evaluation
     if score >= 4:

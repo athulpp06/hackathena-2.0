@@ -39,3 +39,19 @@ To apply, submit your resume on our careers portal at https://stripe.com/jobs.
 """
 legit_result = engine.analyze(sample_legit)
 print(f"Legit job flags detected: {legit_result['flag_count']} (Penalty: {legit_result['total_penalty']}/100)")
+assert legit_result["flag_count"] == 0
+
+print("\n--- Malayalam Scam Rule Test ---")
+malayalam_sample = "വർക്ക് ഫ്രം ഹോം ജോലി. രജിസ്ട്രേഷൻ ഫീസ് 1500 രൂപ അടക്കണം. ആധാർ അയക്കൂ."
+ml_result = engine.analyze(malayalam_sample)
+assert ml_result["flag_count"] >= 2
+assert any("Malayalam" in f["title"] for f in ml_result["red_flags"])
+assert any("Aadhaar" in f["title"] for f in ml_result["red_flags"])
+print(f"  [PASS] Malayalam Scam detected: {ml_result['flag_count']} flags (Penalty: {ml_result['total_penalty']})")
+
+print("\n--- Hindi Scam Rule Test ---")
+hindi_sample = "घर बैठे जॉब। रजिस्ट्रेशन फीस 2000 रुपये जमा करें और पैन कार्ड शेयर करें।"
+hi_result = engine.analyze(hindi_sample)
+assert hi_result["flag_count"] >= 2
+assert any("Fee Demand" in f["title"] for f in hi_result["red_flags"])
+print(f"  [PASS] Hindi Scam detected: {hi_result['flag_count']} flags (Penalty: {hi_result['total_penalty']})")

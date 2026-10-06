@@ -1,0 +1,187 @@
+{
+  "metadata": {
+    "evaluated_at": "2026-10-05T20:17:45.415282+00:00",
+    "git_commit": "4a60e305c4b876f60d41540817ed609b230a503a",
+    "synthetic_holdout_disclosure": "Holdout samples are synthetic, crafted to represent informal channels."
+  },
+  "emscad_holdout": {
+    "sample_count": 3576,
+    "fraud_count": 173,
+    "ml_only": {
+      "fraud_precision": 0.9571,
+      "fraud_recall": 0.7746,
+      "fraud_f1": 0.8562,
+      "accuracy": 0.9874,
+      "confusion_matrix": {
+        "true_negatives": 3397,
+        "false_positives": 6,
+        "false_negatives": 39,
+        "true_positives": 134
+      },
+      "roc_auc": 0.9901,
+      "pr_auc": 0.933
+    },
+    "rules_only": {
+      "fraud_precision": 0.1132,
+      "fraud_recall": 0.0694,
+      "fraud_f1": 0.086,
+      "accuracy": 0.9287,
+      "confusion_matrix": {
+        "true_negatives": 3309,
+        "false_positives": 94,
+        "false_negatives": 161,
+        "true_positives": 12
+      }
+    },
+    "hybrid": {
+      "fraud_precision": 0.5726,
+      "fraud_recall": 0.7746,
+      "fraud_f1": 0.6585,
+      "accuracy": 0.9611,
+      "confusion_matrix": {
+        "true_negatives": 3303,
+        "false_positives": 100,
+        "false_negatives": 39,
+        "true_positives": 134
+      },
+      "roc_auc": 0.9901,
+      "pr_auc": 0.933
+    }
+  },
+  "real_world_holdout": {
+    "sample_count": 125,
+    "fraud_count": 60,
+    "ml_only": {
+      "fraud_precision": 0.8776,
+      "fraud_recall": 0.7167,
+      "fraud_f1": 0.789,
+      "accuracy": 0.816,
+      "confusion_matrix": {
+        "true_negatives": 59,
+        "false_positives": 6,
+        "false_negatives": 17,
+        "true_positives": 43
+      },
+      "roc_auc": 0.9194,
+      "pr_auc": 0.9176
+    },
+    "rules_only": {
+      "fraud_precision": 0.9032,
+      "fraud_recall": 0.4667,
+      "fraud_f1": 0.6154,
+      "accuracy": 0.72,
+      "confusion_matrix": {
+        "true_negatives": 62,
+        "false_positives": 3,
+        "false_negatives": 32,
+        "true_positives": 28
+      }
+    },
+    "hybrid": {
+      "fraud_precision": 0.9348,
+      "fraud_recall": 0.7167,
+      "fraud_f1": 0.8113,
+      "accuracy": 0.84,
+      "confusion_matrix": {
+        "true_negatives": 62,
+        "false_positives": 3,
+        "false_negatives": 17,
+        "true_positives": 43
+      },
+      "roc_auc": 0.9305,
+      "pr_auc": 0.937
+    }
+  },
+  "language_breakdown": {
+    "hinglish": {
+      "sample_count": 21,
+      "fraud_count": 11,
+      "metrics": {
+        "fraud_precision": 1.0,
+        "fraud_recall": 1.0,
+        "fraud_f1": 1.0,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "true_negatives": 10,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "true_positives": 11
+        },
+        "roc_auc": 1.0,
+        "pr_auc": 1.0
+      }
+    },
+    "hi": {
+      "sample_count": 20,
+      "fraud_count": 10,
+      "metrics": {
+        "fraud_precision": 0.8,
+        "fraud_recall": 0.4,
+        "fraud_f1": 0.5333,
+        "accuracy": 0.65,
+        "confusion_matrix": {
+          "true_negatives": 9,
+          "false_positives": 1,
+          "false_negatives": 6,
+          "true_positives": 4
+        },
+        "roc_auc": 0.82,
+        "pr_auc": 0.8625
+      }
+    },
+    "ml": {
+      "sample_count": 10,
+      "fraud_count": 5,
+      "metrics": {
+        "fraud_precision": 1.0,
+        "fraud_recall": 0.4,
+        "fraud_f1": 0.5714,
+        "accuracy": 0.7,
+        "confusion_matrix": {
+          "true_negatives": 5,
+          "false_positives": 0,
+          "false_negatives": 3,
+          "true_positives": 2
+        },
+        "roc_auc": 0.8,
+        "pr_auc": 0.9
+      }
+    },
+    "manglish": {
+      "sample_count": 10,
+      "fraud_count": 5,
+      "metrics": {
+        "fraud_precision": 1.0,
+        "fraud_recall": 1.0,
+        "fraud_f1": 1.0,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "true_negatives": 5,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "true_positives": 5
+        },
+        "roc_auc": 1.0,
+        "pr_auc": 1.0
+      }
+    },
+    "en": {
+      "sample_count": 64,
+      "fraud_count": 29,
+      "metrics": {
+        "fraud_precision": 0.913,
+        "fraud_recall": 0.7241,
+        "fraud_f1": 0.8077,
+        "accuracy": 0.8438,
+        "confusion_matrix": {
+          "true_negatives": 33,
+          "false_positives": 2,
+          "false_negatives": 8,
+          "true_positives": 21
+        },
+        "roc_auc": 0.9158,
+        "pr_auc": 0.9204
+      }
+    }
+  }
+}

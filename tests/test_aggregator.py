@@ -95,4 +95,9 @@ assert intern_result["risk_level"] == "High Risk"
 assert "Critical scam indicators" in intern_result["verdict"]
 assert intern_result["rule_penalty"] >= 80
 
+# Assert safety advice & emergency guidance
+assert "helpline" in intern_result and intern_result["helpline"]["number"] == "1930"
+assert len(intern_result["emergency_steps"]) >= 1
+assert "1930" in intern_result["police_complaint_draft"]
+
 print("\nAll aggregator test assertions passed successfully!")
