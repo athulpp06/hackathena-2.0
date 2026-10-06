@@ -120,7 +120,7 @@ LeakedIn is architected to be **offline-by-default and privacy-respecting**:
 
 ## 🧪 Test Suites & Validation
 
-All **101 tests** pass with 100% success across both root and backend suites:
+All **113 tests** pass with 100% success across the consolidated test suite in `tests/`:
 
 ```powershell
 # Run the complete test suite
@@ -129,21 +129,22 @@ All **101 tests** pass with 100% success across both root and backend suites:
 
 Output:
 ```text
-======================= 101 passed, 1 warning in 6.46s =======================
-tests/test_api.py ......................... [PASS]
-tests/test_gatekeeper.py .................. [PASS]
-tests/test_verifier.py .................... [PASS]
-tests/test_rules.py ....................... [PASS]
-tests/test_aggregator.py .................. [PASS]
-backend/tests/test_aggregator.py .......... [PASS]
-backend/tests/test_api_integration.py ..... [PASS]
-backend/tests/test_phase3.py .............. [PASS]
-backend/tests/test_phase4.py .............. [PASS]
-backend/tests/test_phase5.py .............. [PASS]
-backend/tests/test_phase6.py .............. [PASS]
-backend/tests/test_phase8.py .............. [PASS]
-backend/tests/test_phase9_coverage.py ..... [PASS]
-backend/tests/test_robustness_cases.py .... [PASS]
+======================= 113 passed, 1 warning in 7.66s =======================
+tests/test_aggregator.py ................. [PASS]
+tests/test_api.py ........................ [PASS]
+tests/test_api_integration.py ............ [PASS]
+tests/test_evaluation_integrity.py ....... [PASS]
+tests/test_gatekeeper.py ................. [PASS]
+tests/test_ml.py ......................... [PASS]
+tests/test_phase3.py ..................... [PASS]
+tests/test_phase4.py ..................... [PASS]
+tests/test_phase5.py ..................... [PASS]
+tests/test_phase6.py ..................... [PASS]
+tests/test_phase8.py ..................... [PASS]
+tests/test_phase9_coverage.py ............ [PASS]
+tests/test_robustness_cases.py ........... [PASS]
+tests/test_rules.py ...................... [PASS]
+tests/test_verifier.py ................... [PASS]
 ```
 
 ---
