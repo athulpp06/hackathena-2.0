@@ -8,6 +8,11 @@ venv/
 data/
 *.csv
 
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
 # Build outputs
 dist/
 build/

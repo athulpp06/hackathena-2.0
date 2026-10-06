@@ -211,7 +211,7 @@ The application will be accessible at [http://localhost:80/](http://localhost:80
 │   │   │   └── routes.py             # Canonical & legacy API endpoints
 │   │   ├── db/
 │   │   │   ├── analytics.py          # SQLite analytics & blacklist helper
-│   │   │   └── reputation.db         # Salted SHA-256 community blacklist
+│   │   │   └── reputation.db         # SQLite threat DB (auto-created on first run, gitignored)
 │   │   ├── detector/
 │   │   │   ├── advice.py             # 1930 Cybercrime guidance & police drafting
 │   │   │   ├── aggregator.py         # Multi-signal risk fusion & guardrails

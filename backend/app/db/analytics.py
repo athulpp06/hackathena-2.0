@@ -7,7 +7,7 @@ import os
 import sqlite3
 from typing import Any
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "reputation.db")
+DB_PATH = os.environ.get("REPUTATION_DB_PATH", os.path.join(os.path.dirname(__file__), "reputation.db"))
 
 
 def _get_conn() -> sqlite3.Connection:
