@@ -33,10 +33,10 @@ This document tracks technical decisions made during the evolution of LeakedIn.
 - **Reason:** Keeps the application 100% self-contained, light, and demo-ready without npm, node_modules, or build pipelines. The shareable result card uses HTML5 `<canvas>` to render verified badge graphics with strict exclusion of candidate PII or message text.
 - **i18n Translation:** Client-side dictionary for English, Hindi, and Malayalam covers all labels, buttons, tooltips, and sample descriptions.
 
-## Phase 8: Distribution Channels (Chrome Extension & Telegram Bot)
-- **Decision:** Chrome Extension built strictly on Manifest V3 with minimal declarative permissions (`contextMenus`, `storage`, `activeTab`).
+## Phase 8: Distribution Channels (Chrome / Edge Browser Extension)
+- **Decision:** Chrome/Edge Extension built strictly on Manifest V3 with minimal declarative permissions (`contextMenus`, `storage`, `activeTab`).
 - **Reason:** Satisfies modern Chrome Web Store security guidelines. Content scripts only activate on verified job portals (LinkedIn, Indeed, Naukri), with context-menu actions handling arbitrary text on any website.
-- **Telegram Bot:** Directly imports `backend.app.api.routes._run_pipeline` rather than reimplementing scoring or rules. This guarantees complete feature parity and unified risk scores across web, extension, and bot channels.
+- **Telegram Bot:** Scrapped / retired to streamline codebase focus onto web and browser extension distribution.
 - **WhatsApp Cloud API Architecture:** Designed as an in-memory stateless webhook validating Meta HMAC signatures (`X-Hub-Signature-256`) to ensure zero chat retention.
 
 ## Phase 9: Testing & DevOps

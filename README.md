@@ -320,8 +320,6 @@ docker-compose up --build
 │   └── scripts/
 │       ├── train_pipeline.py         # Calibrated classifier training pipeline
 │       └── run_benchmark_evaluation.py # Ground-truth benchmark evaluation
-├── bots/
-│   └── telegram_bot.py               # Interactive Telegram scanner bot
 ├── docker/
 │   └── nginx.conf                    # Nginx reverse proxy config
 ├── docs/                             # Architecture decisions & audit reports

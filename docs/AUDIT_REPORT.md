@@ -126,7 +126,7 @@ All endpoints were tested live against `http://127.0.0.1:8765`:
 | **Stats API** | **NOT IMPLEMENTED** | Route exists but returns hardcoded stub message: `"Live stats not yet implemented"`. |
 | **Frontend Web App** | **PARTIAL** | Clean dark UI; calls `/analyse-text` successfully, but hardcodes `http://localhost:8000`. |
 | **Chrome Extension** | **WORKS** | Valid Manifest V3, requests minimal permissions (`contextMenus`, `storage`, `activeTab`). |
-| **Telegram Bot** | **WORKS** | Reuses `_run_pipeline` directly; exits gracefully with setup instructions if token missing. |
+| **Telegram Bot** | **RETIRED** | Scrapped in 2.0 release; functionality consolidated into Web App & Browser Extension. |
 | **Docker Build** | **PARTIAL** | Multi-stage Dockerfile exists; permissions mismatch on named volumes with non-root user. |
 
 ### Frontend & Client Findings
@@ -144,10 +144,9 @@ All endpoints were tested live against `http://127.0.0.1:8765`:
 - `background`: `{"service_worker": "background.js"}`.
 - Target Endpoint: Calls `${apiBase}/analyse-text` with fallback to `http://localhost:8000`.
 
-### Telegram Bot Verification
+### Telegram Bot Verification (Retired)
 - `bots/telegram_bot.py`:
-  - Token handling: When `TELEGRAM_BOT_TOKEN` is unset, prints setup instructions and returns 0 without crashing.
-  - Pipeline reuse: Directly executes `from backend.app.api.routes import _run_pipeline`. No duplicated scoring or heuristic logic.
+  - Scrapped in 2.0 release in favor of native Web UI and Chromium Extension. All bot codes and dependencies removed.
 
 ### Docker Environment Verification
 - Command `docker --version` failed:

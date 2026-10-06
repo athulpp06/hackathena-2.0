@@ -165,7 +165,7 @@ async def extract_text_from_image_bytes(image_bytes: bytes, filename: str = "") 
 
 
 def extract_text_from_image(image_bytes: bytes) -> str:
-    """Synchronous helper for bots and scripts to extract text from image bytes."""
+    """Synchronous helper for scripts and background workers to extract text from image bytes."""
     import asyncio
     try:
         return asyncio.run(extract_text_from_image_bytes(image_bytes))[0]

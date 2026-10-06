@@ -1,50 +1,17 @@
 """
-test_phase8.py - Unit tests for Phase 8 distribution channels.
-Validates Telegram bot report formatting, pipeline integration, and extension structure.
+test_phase8.py - Unit tests for Phase 8 distribution channels (Browser Extension).
+Validates Manifest V3 structure, permissions, content scripts, and required assets.
 """
 
+import json
 from pathlib import Path
-
-from backend.app.api.routes import _run_pipeline
-from bots.telegram_bot import format_telegram_report
-
-
-def test_telegram_report_formatting():
-    """Verify format_telegram_report handles scam results with red flags and advice."""
-    sample_text = (
-        "Dear candidate, pay Rs 2000 registration fee via UPI to hr@okaxis. "
-        "Send Aadhaar to +91-9876543210 on WhatsApp."
-    )
-    result = _run_pipeline(sample_text)
-    report = format_telegram_report(result)
-
-    assert "LEAKEDIN SCAM AUDIT REPORT" in report
-    assert "Threat Score:" in report
-    assert "1930" in report
-    assert "cybercrime.gov.in" in report
-    assert "Aadhaar" in report or "Financial Demand" in report
-
-
-def test_telegram_report_safe_posting():
-    """Verify format_telegram_report formats legitimate postings cleanly."""
-    sample_text = (
-        "We are looking for a Senior Software Engineer with 5 years experience in Python and AWS. "
-        "Apply through our official careers page at careers.google.com."
-    )
-    result = _run_pipeline(sample_text)
-    report = format_telegram_report(result)
-
-    assert "LEAKEDIN SCAM AUDIT REPORT" in report
-    assert result["risk_score"] <= 50
-    assert "1930" in report
 
 
 def test_chrome_extension_manifest():
     """Verify Manifest V3 file exists and contains valid JSON with required permissions."""
     manifest_path = Path("extension/manifest.json")
-    assert manifest_path.exists()
+    assert manifest_path.exists(), "extension/manifest.json must exist"
 
-    import json
     with open(manifest_path, encoding="utf-8") as f:
         data = json.load(f)
 
@@ -53,7 +20,40 @@ def test_chrome_extension_manifest():
     assert "storage" in data["permissions"]
     assert "background" in data
     assert "service_worker" in data["background"]
-    assert Path("extension/background.js").exists()
-    assert Path("extension/content.js").exists()
-    assert Path("extension/popup.html").exists()
-    assert Path("extension/icons/icon128.png").exists()
+    assert data["background"]["service_worker"] == "background.js"
+
+
+def test_chrome_extension_files_and_assets():
+    """Verify all core extension scripts, popup views, and icon assets exist."""
+    extension_dir = Path("extension")
+    assert (extension_dir / "background.js").exists(), "background.js missing"
+    assert (extension_dir / "content.js").exists(), "content.js missing"
+    assert (extension_dir / "popup.html").exists(), "popup.html missing"
+    assert (extension_dir / "popup.js").exists(), "popup.js missing"
+    assert (extension_dir / "popup.css").exists(), "popup.css missing"
+
+    for size in ["16", "32", "48", "128"]:
+        icon_path = extension_dir / "icons" / f"icon{size}.png"
+        assert icon_path.exists(), f"Icon {size} missing"
+        assert icon_path.stat().st_size > 0, f"Icon {size} is empty"
+
+
+def test_chrome_extension_content_scripts_and_hosts():
+    """Verify content scripts match patterns target LinkedIn, Indeed, and Naukri."""
+    manifest_path = Path("extension/manifest.json")
+    with open(manifest_path, encoding="utf-8") as f:
+        data = json.load(f)
+
+    content_scripts = data.get("content_scripts", [])
+    assert len(content_scripts) >= 1
+
+    all_matches = []
+    for cs in content_scripts:
+        all_matches.extend(cs.get("matches", []))
+
+    assert any("linkedin.com" in m for m in all_matches), "LinkedIn matcher missing"
+    assert any("indeed.com" in m for m in all_matches), "Indeed matcher missing"
+    assert any("naukri.com" in m for m in all_matches), "Naukri matcher missing"
+
+    host_perms = data.get("host_permissions", [])
+    assert any("8000" in h for h in host_perms), "Local backend host permission missing"

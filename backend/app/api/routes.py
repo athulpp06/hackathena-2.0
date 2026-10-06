@@ -89,7 +89,7 @@ UrlAnalysisRequest = URLAnalysisRequest
 
 
 # ---------------------------------------------------------------------------
-# Core Pipeline Worker (Shared with Telegram Bot & Web Endpoints)
+# Core Pipeline Worker (Shared across API Endpoints)
 # ---------------------------------------------------------------------------
 def _run_pipeline(
     text: str,
