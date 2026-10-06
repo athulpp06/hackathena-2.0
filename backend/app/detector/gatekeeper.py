@@ -26,12 +26,12 @@ logger = logging.getLogger(__name__)
 
 # Check for Gemini API key
 def get_gemini_api_key() -> str:
-    return os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
+    return os.getenv("GEMINI_API_KEY", "").strip()
 
 
 def is_gemini_available() -> bool:
     key = get_gemini_api_key()
-    return bool(key and len(key.strip()) > 10)
+    return bool(key and len(key) > 10)
 
 
 # ── Offline Heuristic Gatekeeper ─────────────────────────────────────────────

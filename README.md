@@ -16,7 +16,7 @@
 1. **4 Unified Input Modes**:
    - 📝 **Paste Text**: Analyze job postings, WhatsApp messages, or recruiter emails.
    - 🔗 **Job URL**: Scrape and scan posting URLs with private IP & SSRF blocklists.
-   - 📸 **Screenshot (OCR)**: Drag & drop, file upload, or direct clipboard (<kbd>Ctrl+V</kbd>) paste with 100% offline local OCR.
+   - 📸 **Screenshot (OCR)**: Drag & drop, file upload, or direct clipboard (<kbd>Ctrl+V</kbd>) paste with local OCR (runs offline by default; Gemini vision optional).
    - 📄 **Offer Letter Forensics (PDF/DOCX)**: Inspect appointment letters for fake MCA CIN/GST numbers, suspicious signatories, and template anomalies.
 2. **Multilingual Localization & Rules**:
    - Full UI & heuristic support for **English**, **हिन्दी (Hindi)**, and **മലയാളം (Malayalam)** with 42 YAML-compiled regional scam patterns.
@@ -79,7 +79,7 @@
 
 ### 1. AI Gatekeeper (`backend/app/detector/gatekeeper.py`)
 - **Semantic Noise Rejection**: Eliminates false positives by determining whether an input represents genuine employment recruitment before calculating fraud scores.
-- **Dual-Engine Execution**: Operates with zero configuration using built-in offline linguistic heuristics, with seamless upgrade to Google Gemini Cloud Multimodal Vision (`gemini-1.5-flash`) when an API key is provided.
+- **Dual-Engine Execution**: Operates offline by default using built-in linguistic heuristics. If `GEMINI_API_KEY` is configured in the environment, Google Gemini Cloud Multimodal Vision can optionally be used (transmitting text/screenshots to Google).
 
 ### 2. Calibrated Machine Learning & XAI (`backend/app/detector/ml.py`)
 - **Training Pipeline**: Trained on EMSCAD (17,880 postings) augmented with real-world Indian recruitment scams, calibrated via `CalibratedClassifierCV(method='isotonic', cv=5)`.
@@ -105,6 +105,16 @@
 ### 5. Community Threat Blacklist (`backend/app/db/analytics.py` & `reputation.py`)
 - **Privacy-Preserving Lookups**: Entity identifiers (phone numbers, UPI IDs, domain names) are hashed using salted SHA-256 HMAC before checking against `reputation.db`.
 - **Victim Community Reporting**: Users can report scam contacts via `POST /api/report`, incrementing report counts without storing user message text.
+
+---
+
+## 🔒 Privacy & Optional Cloud Features
+
+LeakedIn is architected to be **offline-by-default and privacy-respecting**:
+- **Offline by Default**: All machine learning scoring, 42 multilingual rule heuristics (English, Hindi, Malayalam), OCR text extraction, and offer letter forensics execute entirely on the local system without outbound network calls.
+- **Zero Permanent Retention**: User job descriptions, URLs, screenshots, and offer letters are processed in-memory and are never stored to disk or database tables.
+- **Optional Google Gemini Cloud**: The AI Gatekeeper only connects to Google Gemini if `GEMINI_API_KEY` is explicitly configured in your environment. When enabled, job text or screenshots are sent to Google's API for multimodal relevance evaluation. With no key set, the system runs completely offline using local heuristic classifiers.
+- **Privacy-Preserving Threat Intelligence**: Contact identifiers (phones, UPI IDs, domains) submitted to the community database are hashed with a salted SHA-256 HMAC before storage, ensuring no raw personal messages or identifiers are stored.
 
 ---
 

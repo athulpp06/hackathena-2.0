@@ -78,7 +78,7 @@
     <!-- Privacy Banner -->
     <div class="privacy-badge" role="status">
       <span class="privacy-icon">🔒</span>
-      <span data-i18n="privacy_note"><strong>Privacy First:</strong> Text & documents are analyzed purely in-memory. Zero user data is stored on this server.</span>
+      <span data-i18n="privacy_note"><strong>Privacy:</strong> Runs offline by default with zero permanent storage. If Gemini Cloud is enabled, input is sent to Google for analysis.</span>
     </div>
   </section>
 
@@ -151,7 +151,7 @@
         >
           <div class="upload-icon">📸</div>
           <p><strong data-i18n="upload_img_title">Click to upload or drag & drop a screenshot</strong></p>
-          <p class="upload-hint" data-i18n="upload_img_hint">Supports JPG, PNG, WEBP &bull; Press <kbd>Ctrl+V</kbd> to paste directly &bull; 100% offline local OCR</p>
+          <p class="upload-hint" data-i18n="upload_img_hint">Supports JPG, PNG, WEBP &bull; Press <kbd>Ctrl+V</kbd> to paste directly &bull; Runs offline by default (Gemini vision optional)</p>
           <input type="file" id="image-upload" accept="image/*" style="display:none" onchange="previewImage(event)" />
         </div>
 
