@@ -1,39 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LeakedIn — AI Recruitment Fraud & Scam Shield</title>
-  <meta name="description" content="Production-grade AI shield against job scams, fraudulent offer letters, fake WhatsApp recruiters, and identity theft. In-memory analysis with zero data retention." />
-  
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  
-  <link rel="stylesheet" href="styles.css" />
+  <title>LeakedIn — AI Recruitment Fraud &amp; Scam Shield</title>
+  <meta name="description"
+    content="Production-grade AI shield against job scams, fraudulent offer letters, fake WhatsApp recruiters, and identity theft. In-memory analysis with zero data retention." />
+  <link rel="icon" type="image/svg+xml" href="/static/assets/brand/favicon.svg" />
+  <link rel="icon" type="image/x-icon" href="/static/assets/brand/favicon.ico" />
+  <link rel="apple-touch-icon" href="/static/assets/brand/logo-192.png" />
+  <meta property="og:title" content="LeakedIn — AI Recruitment Fraud &amp; Scam Shield" />
+  <meta property="og:description"
+    content="Production-grade AI shield against job scams, fraudulent offer letters, fake WhatsApp recruiters, and identity theft." />
+  <meta property="og:image" content="/static/assets/brand/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="/static/assets/brand/og-image.png" />
+  <link rel="stylesheet" href="/static/styles.css" />
 </head>
-<body>
-  <!-- Ambient background glow & grid -->
-  <div class="bg-grid"></div>
-  <div class="ambient-glow glow-1"></div>
-  <div class="ambient-glow glow-2"></div>
 
-  <!-- HEADER -->
+<body>
+
+  <!-- HEADER / NAVBAR -->
   <header class="header">
     <div class="header-inner">
-      <div class="logo">
-        <span class="logo-icon" aria-hidden="true">🛡️</span>
+      <a href="#" class="logo" aria-label="LeakedIn Home">
+        <img src="/static/assets/brand/logo-mark.svg" alt="LeakedIn" class="logo-mark-img" width="24" height="24"
+          style="vertical-align: middle;" />
         <div class="logo-title-group">
           <span class="logo-text">Leaked<span class="logo-accent">In</span></span>
-          <span class="logo-tag" data-i18n="tagline_badge">AI Scam Shield</span>
+          <span class="logo-tag">[ <span data-i18n="tagline_badge">Job Scam Detector</span> ]</span>
         </div>
-      </div>
+      </a>
 
       <div class="header-actions">
         <!-- Language Switcher -->
         <div class="lang-switcher">
-          <span class="lang-icon" aria-hidden="true">🌐</span>
           <select id="lang-select" onchange="changeLanguage(this.value)" aria-label="Select language">
             <option value="en">English</option>
             <option value="hi">हिन्दी (Hindi)</option>
@@ -42,54 +44,93 @@
         </div>
 
         <!-- Gemini Gatekeeper Status Pill -->
-        <button class="btn-pill" id="gemini-toggle-btn" type="button" title="Configure AI Gatekeeper & Gemini Multimodal Vision">
-          <span class="pill-sparkle">✨</span>
-          <span class="pill-label">Gatekeeper: <strong id="gemini-status-label">Offline Active</strong></span>
+        <button class="btn-pill" id="gemini-toggle-btn" onclick="openModal('gemini-modal')" type="button"
+          title="Configure AI Gatekeeper & Gemini Multimodal Vision">
           <span class="status-indicator-dot" id="gemini-status-dot"></span>
+          <span class="pill-label">GK: <strong id="gemini-status-label">Offline Active</strong></span>
         </button>
 
         <!-- Threat DB Stats Button -->
-        <button class="btn-outline-sm" id="btn-stats" type="button" title="View Community Threat Intelligence Stats">
-          <span>📊</span> <span class="hide-mobile">Threat DB</span>
+        <button class="btn-outline-sm" id="btn-stats" onclick="openModal('stats-modal')" type="button"
+          title="View Community Threat Intelligence Stats">
+          <span class="hide-mobile">Threat DB</span>
         </button>
 
-        <!-- How It Works Button -->
-        <button class="btn-outline-sm" onclick="openModal('how-it-works-modal')" type="button" aria-label="How it works">
-          <span>ℹ️</span> <span data-i18n="btn_how_it_works" class="hide-mobile">How It Works</span>
-        </button>
+        <!-- How It Works Link -->
+        <a href="#how-it-works" class="btn-outline-sm" aria-label="How it works">
+          <span data-i18n="btn_how_it_works" class="hide-mobile">How It Works</span>
+        </a>
       </div>
     </div>
   </header>
 
   <!-- HERO SECTION -->
   <section class="hero">
-    <div class="hero-badge">
-      <span class="pulse-dot"></span>
-      <span>Hackathena 2.0 &bull; Multi-Tier Recruitment Scam Shield</span>
+    <div class="hero-top-meta">
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        <span>HACKATHENA 2.0 &bull; MULTI-TIER RECRUITMENT FRAUD SHIELD</span>
+      </div>
+      <div style="font-family: var(--font-mono); font-size: 11px; color: hsl(var(--muted-foreground));">
+        SYSTEM: ONLINE // 5-TIER DEFENSE
+      </div>
     </div>
-    <h1 class="hero-title">
-      Is That Job Real<br />
-      <span class="gradient-text">or a Dangerous Scam?</span>
-    </h1>
-    <p class="hero-sub" data-i18n="header_sub">
-      Multi-layered detection for fraudulent job postings, fake offer letters, WhatsApp recruitment traps, and identity theft.
-    </p>
 
-    <!-- Privacy Banner -->
-    <div class="privacy-badge" role="status">
-      <span class="privacy-icon">🔒</span>
-      <span data-i18n="privacy_note"><strong>Privacy First:</strong> Text & documents are analyzed purely in-memory. Zero user data is stored on this server.</span>
+    <div class="hero-main-content">
+      <div class="hero-left-title">
+        <a href="#" class="hero-logo-link" aria-label="LeakedIn Home">
+          <img src="/static/assets/brand/logo.svg" alt="LeakedIn" class="hero-brand-logo" width="220" height="51" />
+        </a>
+        <h1 class="hero-wordmark">
+          Leaked<br /><span class="hero-wordmark-accent">In</span>
+        </h1>
+      </div>
+      <div class="hero-right-tagline">
+        <div class="hero-bracket-tag">
+          [ <span data-i18n="tagline_badge">Job Scam Detector</span> ]
+        </div>
+        <p class="hero-sub" data-i18n="header_sub">
+          Multi-layered detection for fraudulent job postings, fake offer letters, WhatsApp recruitment traps, and
+          identity theft.
+        </p>
+        <div class="privacy-badge" role="status">
+          <span data-i18n="privacy_note"><strong>Privacy:</strong> Runs offline by default with zero permanent storage.
+            If Gemini Cloud is enabled, input is sent to Google for analysis.</span>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- MAIN CONTAINER -->
-  <main class="container">
+  <!-- SCAM VECTORS MARQUEE STRIP -->
+  <div class="marquee-strip" aria-hidden="true">
+    <div class="marquee-track">
+      <span class="marquee-item">[ UPFRONT REGISTRATION FEES ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ FAKE OFFER LETTERS ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ WHATSAPP RECRUITMENT TRAPS ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ TELEGRAM TASK SCAMS ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ CORPORATE DOMAIN SPOOFING ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ FAKE MCA CIN &amp; GST NUMBERS ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ ADVANCE TRAINING DEPOSITS ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ IDENTITY &amp; DOCUMENT THEFT ] <span class="accent">•</span></span>
+      <!-- Repeated for smooth infinite marquee -->
+      <span class="marquee-item">[ UPFRONT REGISTRATION FEES ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ FAKE OFFER LETTERS ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ WHATSAPP RECRUITMENT TRAPS ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ TELEGRAM TASK SCAMS ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ CORPORATE DOMAIN SPOOFING ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ FAKE MCA CIN &amp; GST NUMBERS ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ ADVANCE TRAINING DEPOSITS ] <span class="accent">•</span></span>
+      <span class="marquee-item">[ IDENTITY &amp; DOCUMENT THEFT ] <span class="accent">•</span></span>
+    </div>
+  </div>
+
+  <!-- MAIN SCANNER CONTAINER -->
+  <main class="container" id="analyzer-section">
 
     <!-- PRESET DEMO SELECTOR -->
     <section class="card sample-card" aria-label="Instant demo selector">
       <div class="sample-header">
         <div class="sample-title-group">
-          <span class="sample-icon">⚡</span>
           <strong data-i18n="sample_title">Instant Demo Presets:</strong>
         </div>
         <span class="sample-hint" data-i18n="sample_hint">Select a realistic test case to populate inputs:</span>
@@ -103,55 +144,46 @@
     <section class="card input-card">
       <nav class="tabs" role="tablist">
         <button class="tab active" data-tab="text" role="tab" aria-selected="true" id="tab-btn-text">
-          <span>📝</span> <span data-i18n="tab_text">Paste Text</span>
+          <span data-i18n="tab_text">Paste Text</span>
         </button>
         <button class="tab" data-tab="url" role="tab" aria-selected="false" id="tab-btn-url">
-          <span>🔗</span> <span data-i18n="tab_url">Job URL</span>
+          <span data-i18n="tab_url">Job URL</span>
         </button>
         <button class="tab" data-tab="image" role="tab" aria-selected="false" id="tab-btn-image">
-          <span>📸</span> <span data-i18n="tab_image">Screenshot (OCR)</span>
+          <span data-i18n="tab_image">Screenshot (OCR)</span>
         </button>
         <button class="tab" data-tab="document" role="tab" aria-selected="false" id="tab-btn-document">
-          <span>📄</span> <span data-i18n="tab_document">Offer Letter (PDF/DOCX)</span>
+          <span data-i18n="tab_document">Offer Letter (PDF/DOCX)</span>
         </button>
       </nav>
 
       <!-- TAB 1: TEXT -->
       <div class="tab-content active" id="tab-text" role="tabpanel">
-        <textarea
-          id="job-text"
+        <textarea id="job-text"
           placeholder="Paste the job posting, WhatsApp recruitment pitch, or email here...&#10;&#10;e.g. 'URGENT HIRING: Earn Rs 45000/week working from home 2 hours a day. No experience required. To confirm your slot, a refundable security deposit of Rs 1500 is required...'"
-          rows="8"
-          aria-label="Job posting text"
-        ></textarea>
+          rows="8" aria-label="Job posting text"></textarea>
       </div>
 
       <!-- TAB 2: URL -->
       <div class="tab-content" id="tab-url" role="tabpanel">
         <div class="url-input-wrap">
-          <input type="url" id="job-url" placeholder="https://example-careers.com/jobs/view/1234" class="url-input" aria-label="Job posting URL" />
+          <input type="url" id="job-url" placeholder="https://example-careers.com/jobs/view/1234" class="url-input"
+            aria-label="Job posting URL" />
         </div>
         <p class="field-hint" data-i18n="url_hint">
-          🛡️ Protected with SSRF safeguards. If blocked by authentication (LinkedIn, Naukri), copy and paste the text directly into the Text tab.
+          Protected with SSRF safeguards. If blocked by authentication (LinkedIn, Naukri), copy and paste the text
+          directly into the Text tab.
         </p>
       </div>
 
       <!-- TAB 3: IMAGE / SCREENSHOT -->
       <div class="tab-content" id="tab-image" role="tabpanel">
-        <div
-          class="upload-zone"
-          id="upload-zone-img"
-          onclick="document.getElementById('image-upload').click()"
-          ondragover="handleDragOver(event)"
-          ondragleave="handleDragLeave(event)"
-          ondrop="handleImageDrop(event)"
-          tabindex="0"
-          role="button"
-          aria-label="Upload screenshot"
-        >
-          <div class="upload-icon">📸</div>
-          <p><strong data-i18n="upload_img_title">Click to upload or drag & drop a screenshot</strong></p>
-          <p class="upload-hint" data-i18n="upload_img_hint">Supports JPG, PNG, WEBP &bull; Press <kbd>Ctrl+V</kbd> to paste directly &bull; 100% offline local OCR</p>
+        <div class="upload-zone" id="upload-zone-img" onclick="document.getElementById('image-upload').click()"
+          ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleImageDrop(event)"
+          tabindex="0" role="button" aria-label="Upload screenshot">
+          <p><strong data-i18n="upload_img_title">Click to upload or drag &amp; drop a screenshot</strong></p>
+          <p class="upload-hint" data-i18n="upload_img_hint">Supports JPG, PNG, WEBP &bull; Press <kbd>Ctrl+V</kbd> to
+            paste directly &bull; Runs offline by default (Gemini vision optional)</p>
           <input type="file" id="image-upload" accept="image/*" style="display:none" onchange="previewImage(event)" />
         </div>
 
@@ -159,14 +191,15 @@
           <img id="image-preview" src="" alt="Screenshot Preview" />
           <div class="preview-bar">
             <span id="image-filename" class="preview-filename">screenshot.png</span>
-            <button class="btn-clear" onclick="clearImage()" type="button" aria-label="Remove image">✕ <span data-i18n="remove">Remove</span></button>
+            <button class="btn-clear" onclick="clearImage()" type="button" aria-label="Remove image">✕ <span
+                data-i18n="remove">Remove</span></button>
           </div>
         </div>
 
         <!-- Extracted OCR Preview -->
         <div id="ocr-extracted-container" class="ocr-extracted-box" style="display:none">
           <div class="ocr-extracted-header">
-            <span>📄 Extracted OCR Text:</span>
+            <span>Extracted OCR Text:</span>
             <span class="badge-subtle" id="ocr-char-count">0 chars</span>
           </div>
           <textarea id="ocr-extracted-text" rows="3" readonly></textarea>
@@ -175,31 +208,18 @@
 
       <!-- TAB 4: DOCUMENT (OFFER LETTER FORENSICS) -->
       <div class="tab-content" id="tab-document" role="tabpanel">
-        <div
-          class="upload-zone"
-          id="upload-zone-doc"
-          onclick="document.getElementById('doc-upload').click()"
-          ondragover="handleDragOver(event)"
-          ondragleave="handleDragLeave(event)"
-          ondrop="handleDocDrop(event)"
-          tabindex="0"
-          role="button"
-          aria-label="Upload offer letter document"
-        >
-          <div class="upload-icon">📑</div>
+        <div class="upload-zone" id="upload-zone-doc" onclick="document.getElementById('doc-upload').click()"
+          ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDocDrop(event)"
+          tabindex="0" role="button" aria-label="Upload offer letter document">
           <p><strong data-i18n="upload_doc_title">Upload Offer Letter or Contract (PDF / DOCX)</strong></p>
-          <p class="upload-hint" data-i18n="upload_doc_hint">Max 5 MB &bull; Analyzes CIN/GST, suspicious signatory clauses, metadata mismatches & layout</p>
-          <input
-            type="file"
-            id="doc-upload"
+          <p class="upload-hint" data-i18n="upload_doc_hint">Max 5 MB &bull; Analyzes CIN/GST, suspicious signatory
+            clauses, metadata mismatches &amp; layout</p>
+          <input type="file" id="doc-upload"
             accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            style="display:none"
-            onchange="previewDoc(event)"
-          />
+            style="display:none" onchange="previewDoc(event)" />
         </div>
 
         <div id="doc-preview-container" class="doc-file-info" style="display:none">
-          <span class="doc-icon">📄</span>
           <span id="doc-filename">filename.pdf</span>
           <button class="btn-clear-inline" onclick="clearDoc()" type="button" aria-label="Remove document">✕</button>
         </div>
@@ -219,7 +239,6 @@
 
       <!-- MAIN ACTION BUTTON -->
       <button class="btn-analyze" id="btn-analyze-main" onclick="runAnalysis()">
-        <span class="btn-icon">🔍</span>
         <span id="btn-analyze-label" data-i18n="btn_scan_text">Analyze Job Posting</span>
         <span class="btn-spinner" id="main-spinner" style="display:none"></span>
       </button>
@@ -244,7 +263,6 @@
       <!-- GATEKEEPER INTERCEPTION CARD (For Non-Job Content) -->
       <div class="card gatekeeper-card" id="gatekeeper-alert" style="display:none">
         <div class="gatekeeper-header">
-          <div class="gatekeeper-icon-box">🚫</div>
           <div class="gatekeeper-meta">
             <span class="badge-warning" id="gk-badge">Non-Recruitment Content</span>
             <h2 class="gatekeeper-title" id="gk-title">Not a Job Posting</h2>
@@ -271,9 +289,10 @@
         </div>
 
         <div class="gatekeeper-advice-box">
-          <strong>💡 Why was fraud scoring withheld?</strong>
+          <strong>Why was fraud scoring withheld?</strong>
           <p id="gk-suggestion">
-            LeakedIn uses an AI Gatekeeper to ensure scoring is only calculated on actual employment recruitment offers. To test fraud detection, please provide a job description or internship announcement.
+            LeakedIn uses an AI Gatekeeper to ensure scoring is only calculated on actual employment recruitment offers.
+            To test fraud detection, please provide a job description or internship announcement.
           </p>
         </div>
 
@@ -287,7 +306,6 @@
 
         <!-- 1. VERIFIED RECRUITMENT BANNER -->
         <div class="job-verified-banner" id="job-verified-banner">
-          <span class="verified-icon">🛡️</span>
           <div class="verified-meta">
             <span class="verified-title">Verified Recruitment Posting</span>
             <span class="verified-sub">Inspected by <strong id="verified-engine">AI Gatekeeper Layer</strong></span>
@@ -301,8 +319,10 @@
             <!-- Circular SVG Risk Gauge -->
             <div class="risk-gauge-container">
               <svg class="risk-gauge" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1e293b" stroke-width="16" stroke-linecap="round"/>
-                <path id="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#22c55e" stroke-width="16" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#262626" stroke-width="16"
+                  stroke-linecap="butt" />
+                <path id="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#22c55e" stroke-width="16"
+                  stroke-linecap="butt" stroke-dasharray="251.2" stroke-dashoffset="251.2" />
                 <text x="100" y="88" text-anchor="middle" class="gauge-score" id="gauge-score">0</text>
                 <text x="100" y="108" text-anchor="middle" class="gauge-label">/ 100</text>
               </svg>
@@ -313,8 +333,8 @@
             <div class="verdict-titles">
               <div class="verdict-badge-row">
                 <span class="verdict-level-pill" id="verdict-level">Suspicious</span>
-                <span class="lang-tag" id="detected-lang-tag">🌐 Lang: EN</span>
-                <span class="timing-tag" id="timing-tag">⚡ 32ms</span>
+                <span class="lang-tag" id="detected-lang-tag">Lang: EN</span>
+                <span class="timing-tag" id="timing-tag">32ms</span>
               </div>
               <h2 class="verdict-text" id="verdict-text">Probable Scam Detected</h2>
               <p class="verdict-desc" id="verdict-desc"></p>
@@ -332,21 +352,21 @@
           <!-- METRICS GRID -->
           <div class="metrics-grid">
             <div class="metric-box">
-              <span class="metric-label" data-i18n="metric_ml">🤖 ML Fraud Likelihood</span>
+              <span class="metric-label" data-i18n="metric_ml">ML Fraud Likelihood</span>
               <span class="metric-val" id="ml-score-val">--%</span>
               <div class="metric-bar-track">
                 <div class="metric-bar-fill" id="ml-bar" style="width: 0%"></div>
               </div>
             </div>
             <div class="metric-box">
-              <span class="metric-label" data-i18n="metric_rules">🚩 Triggered Rules</span>
+              <span class="metric-label" data-i18n="metric_rules">Triggered Rules</span>
               <span class="metric-val" id="rules-count-val">0 Flags</span>
               <div class="metric-bar-track">
                 <div class="metric-bar-fill" id="rules-bar" style="width: 0%"></div>
               </div>
             </div>
             <div class="metric-box">
-              <span class="metric-label" data-i18n="metric_calib">🎯 Calibrated Confidence</span>
+              <span class="metric-label" data-i18n="metric_calib">Calibrated Confidence</span>
               <span class="metric-val" id="calib-score-val">--%</span>
               <div class="metric-bar-track">
                 <div class="metric-bar-fill" id="calib-bar" style="width: 0%"></div>
@@ -358,47 +378,24 @@
         <!-- 3. SAFETY ADVICE & 1930 CYBERCRIME HELPLINE -->
         <div class="card advice-card" id="advice-card">
           <div class="section-title">
-            <span class="section-icon">🛡️</span>
             <h3 data-i18n="advice_title">What You Should Do Next</h3>
           </div>
 
           <!-- URGENT NOTICE (For High Risk) -->
           <div class="urgent-banner" id="urgent-banner" style="display:none">
-            <span class="urgent-icon">🚨</span>
             <div class="urgent-text">
               <strong data-i18n="urgent_label">CRITICAL NOTICE:</strong>
-              <span id="urgent-message">Immediate steps are needed to safeguard your financial or identity security.</span>
+              <span id="urgent-message">Immediate steps are needed to safeguard your financial or identity
+                security.</span>
             </div>
           </div>
 
           <ul class="advice-list" id="advice-list"></ul>
-
-          <!-- HELPLINE 1930 CALLOUT -->
-          <div class="helpline-callout" id="helpline-callout">
-            <div class="helpline-left">
-              <span class="helpline-badge">🚨 1930</span>
-              <div>
-                <strong data-i18n="helpline_title">National Cyber Crime Reporting Helpline</strong>
-                <p data-i18n="helpline_desc">
-                  If money was transferred or sensitive IDs were leaked, dial 1930 immediately or file an incident at <strong>cybercrime.gov.in</strong>.
-                </p>
-              </div>
-            </div>
-            <div class="helpline-actions">
-              <button class="btn-secondary-sm" onclick="copyCybercrimeDraft()" type="button" data-i18n="btn_copy_police">
-                📋 Copy Police Complaint
-              </button>
-              <button class="btn-outline-sm" onclick="openModal('complaint-modal')" type="button">
-                👁️ View Draft
-              </button>
-            </div>
-          </div>
         </div>
 
         <!-- 4. EXPLAINABLE ML (XAI) -->
         <div class="card xai-card" id="explanation-card">
           <div class="section-title">
-            <span class="section-icon">🧠</span>
             <h3 data-i18n="xai_title">Why the Machine Learning Model Flagged This</h3>
           </div>
           <p class="section-desc" data-i18n="xai_desc">
@@ -406,11 +403,11 @@
           </p>
           <div class="xai-grid">
             <div class="xai-col fraud-col">
-              <span class="xai-col-title" data-i18n="xai_fraud_col">⚠️ Scam-Associated Triggers:</span>
+              <span class="xai-col-title" data-i18n="xai_fraud_col">Scam-Associated Triggers:</span>
               <div id="top-fraud-ngrams" class="chips-container"></div>
             </div>
             <div class="xai-col legit-col">
-              <span class="xai-col-title" data-i18n="xai_legit_col">✅ Legitimacy Indicators:</span>
+              <span class="xai-col-title" data-i18n="xai_legit_col">Legitimacy Indicators:</span>
               <div id="top-legit-ngrams" class="chips-container"></div>
             </div>
           </div>
@@ -419,8 +416,7 @@
         <!-- 5. EXTRACTED ENTITIES & COMMUNITY REPUTATION -->
         <div class="card entities-card" id="entities-card">
           <div class="section-title">
-            <span class="section-icon">🔎</span>
-            <h3 data-i18n="entities_title">Extracted Entities & Community Reputation Intelligence</h3>
+            <h3 data-i18n="entities_title">Extracted Entities &amp; Community Reputation Intelligence</h3>
           </div>
           <p class="section-desc" data-i18n="entities_desc">
             Identified contact points cross-checked against our community blacklist database:
@@ -428,7 +424,6 @@
 
           <!-- REPUTATION HIT ALERT -->
           <div id="reputation-alert" class="reputation-alert" style="display:none">
-            <span class="rep-icon">⛔</span>
             <div id="reputation-alert-content"></div>
           </div>
 
@@ -438,8 +433,7 @@
         <!-- 6. DOMAIN & CORPORATE IDENTITY VERIFICATION -->
         <div class="card domain-card" id="domain-card">
           <div class="section-title">
-            <span class="section-icon">🌐</span>
-            <h3 data-i18n="domain_title">Domain & Corporate Identity Verification</h3>
+            <h3 data-i18n="domain_title">Domain &amp; Corporate Identity Verification</h3>
           </div>
           <div id="domain-flags-list" class="domain-flags-list"></div>
         </div>
@@ -447,7 +441,6 @@
         <!-- 7. RULE ENGINE RED FLAGS -->
         <div class="card red-flags-card" id="red-flags-card">
           <div class="section-title">
-            <span class="section-icon">🚩</span>
             <h3 data-i18n="red_flags_title">Rule Engine Red Flags Detected</h3>
           </div>
           <div id="red-flags-list" class="red-flags-list"></div>
@@ -456,7 +449,6 @@
         <!-- 8. INTERACTIVE PHRASE INSPECTION -->
         <div class="card highlight-card" id="highlighted-card">
           <div class="section-title">
-            <span class="section-icon">🔍</span>
             <h3 data-i18n="highlights_title">Interactive Phrase Inspection</h3>
           </div>
           <p class="section-desc" data-i18n="highlights_desc">
@@ -468,8 +460,7 @@
         <!-- 9. OFFER LETTER FORENSICS (When PDF/DOCX was analyzed) -->
         <div class="card doc-forensics-card" id="doc-forensics-card" style="display:none">
           <div class="section-title">
-            <span class="section-icon">📑</span>
-            <h3>Offer Letter Forensics & Layout Inspection</h3>
+            <h3>Offer Letter Forensics &amp; Layout Inspection</h3>
           </div>
           <div id="doc-forensics-content"></div>
         </div>
@@ -477,16 +468,19 @@
         <!-- 10. ACTION TOOLBAR -->
         <div class="action-toolbelt">
           <button class="btn-tool" onclick="copyResultSummary()" type="button">
-            📋 <span data-i18n="btn_copy_summary">Copy Scan Summary</span>
+            <span data-i18n="btn_copy_summary">Copy Scan Summary</span>
+          </button>
+          <button class="btn-tool" onclick="openModal('complaint-modal')" type="button">
+            <span data-i18n="btn_copy_police">Copy Police Complaint</span>
           </button>
           <button class="btn-tool" onclick="exportShareablePNG()" type="button">
-            🖼️ <span data-i18n="btn_export_png">Download Shareable Card (PNG)</span>
+            <span data-i18n="btn_export_png">Download Shareable Card (PNG)</span>
           </button>
           <button class="btn-tool btn-danger-tool" onclick="openModal('report-modal')" type="button">
-            🚨 <span data-i18n="btn_report_db">Report to Scam DB</span>
+            <span data-i18n="btn_report_db">Report to Scam DB</span>
           </button>
           <button class="btn-tool" onclick="openModal('feedback-modal')" type="button">
-            💬 <span data-i18n="btn_feedback">Feedback</span>
+            <span data-i18n="btn_feedback">Feedback</span>
           </button>
         </div>
 
@@ -500,12 +494,109 @@
 
     <!-- ERROR STATE -->
     <section class="card error-card" id="error-card" style="display:none" role="alert">
-      <div class="error-icon">❌</div>
       <p id="error-message" class="error-text">Something went wrong. Please try again.</p>
-      <button class="btn-reset" onclick="resetUI()" type="button">← <span data-i18n="try_again">Try Again</span></button>
+      <button class="btn-reset" onclick="resetUI()" type="button">← <span data-i18n="try_again">Try
+          Again</span></button>
     </section>
 
   </main>
+
+  <!-- HOW IT WORKS TIMELINE SECTION -->
+  <section class="timeline-section" id="how-it-works">
+    <div class="timeline-header-box">
+      <span class="timeline-tag">[ 01 — ARCHITECTURE ]</span>
+      <h2 class="timeline-heading">
+        5-Tier Hybrid Defense Against Recruitment Fraud
+      </h2>
+    </div>
+
+    <div class="timeline-grid">
+      <!-- Tier 0 -->
+      <div class="timeline-col">
+        <div class="timeline-step-label">[ 01 ]</div>
+        <div class="timeline-card-panel h-stair-1">
+          <h3 class="timeline-card-title">AI Gatekeeper</h3>
+          <p class="timeline-card-desc">
+            Layer 0: Relevance &amp; Noise Filter. Intercepts non-recruitment submissions (recipes, candidate CVs,
+            invoices, casual chats) to prevent false positives before fraud scoring.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tier 1 -->
+      <div class="timeline-col">
+        <div class="timeline-step-label">[ 02 ]</div>
+        <div class="timeline-card-panel h-stair-2">
+          <h3 class="timeline-card-title">Calibrated ML &amp; XAI</h3>
+          <p class="timeline-card-desc">
+            Layer 1: Isotonic-calibrated Logistic Regression with sublinear TF-IDF trained on EMSCAD and real Indian
+            scam corpuses. 0.9901 ROC-AUC with linear-time n-gram feature attribution.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tier 2 -->
+      <div class="timeline-col">
+        <div class="timeline-step-label">[ 03 ]</div>
+        <div class="timeline-card-panel h-stair-3">
+          <h3 class="timeline-card-title">Multilingual Rules</h3>
+          <p class="timeline-card-desc">
+            Layer 2: 42 YAML-compiled heuristic patterns targeting scam vectors in English, Hindi, and Malayalam. Strips
+            zero-width exploits, Cyrillic homoglyphs, and leetspeak.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tier 3 -->
+      <div class="timeline-col">
+        <div class="timeline-step-label">[ 04 ]</div>
+        <div class="timeline-card-panel h-stair-4">
+          <h3 class="timeline-card-title">Forensics &amp; Threat DB</h3>
+          <p class="timeline-card-desc">
+            Layer 3: Structural PDF/DOCX offer letter inspection, Indian MCA CIN &amp; GST verification, domain
+            typosquatting detection, and salted SHA-256 community blacklist lookups.
+          </p>
+        </div>
+      </div>
+
+      <!-- Tier 4 -->
+      <div class="timeline-col">
+        <div class="timeline-step-label">[ 05 ]</div>
+        <div class="timeline-card-panel h-stair-5">
+          <h3 class="timeline-card-title">Risk Aggregator</h3>
+          <p class="timeline-card-desc">
+            Layer 4: Unified Bayesian combination logic, language-aware weighting, critical risk floors (≥51),
+            pre-drafted 1930 cybercrime complaints, and canvas PNG card exports.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HELPLINE & REPORT SECTION -->
+  <section class="contact-section" id="helpline-section">
+    <div class="contact-card">
+      <div class="contact-pill-nav">
+        <a href="tel:1930" title="Dial National Cyber Crime Helpline">Dial 1930</a>
+        <span>•</span>
+        <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer">cybercrime.gov.in</a>
+        <span>•</span>
+        <button type="button" onclick="openModal('report-modal')">Report Scammer</button>
+        <span>•</span>
+        <button type="button" onclick="openModal('complaint-modal')">Police Draft</button>
+      </div>
+
+      <div class="contact-highlight-box">
+        <h2 class="contact-headline">DIAL 1930</h2>
+      </div>
+
+      <p class="contact-subtext">
+        <strong>National Cyber Crime Reporting Portal &amp; Helpline</strong><br />
+        If you transferred money or submitted identity documents to an unverified recruiter, dial <strong>1930</strong>
+        immediately to freeze financial transactions, or file an incident report at <strong>cybercrime.gov.in</strong>.
+      </p>
+    </div>
+  </section>
 
   <!-- ==================== MODALS ==================== -->
 
@@ -514,40 +605,49 @@
     <div class="modal-backdrop" onclick="closeModal('how-it-works-modal')"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h3>🛡️ <span data-i18n="modal_hiw_title">How LeakedIn Works</span></h3>
+        <h3><img src="/static/assets/brand/logo-mark.svg" alt="LeakedIn" width="20" height="20"
+            style="vertical-align: middle; margin-right: 8px;" /> <span data-i18n="modal_hiw_title">How LeakedIn
+            Works</span></h3>
         <button class="modal-close" onclick="closeModal('how-it-works-modal')" aria-label="Close modal">✕</button>
       </div>
       <div class="modal-body">
-        <p data-i18n="hiw_intro">LeakedIn does not rely on a single fragile rule or a black-box AI. It executes an <strong>Intelligent 5-Tier Hybrid Pipeline</strong>:</p>
-        
+        <p data-i18n="hiw_intro">LeakedIn does not rely on a single fragile rule or a black-box AI. It executes an
+          <strong>Intelligent 5-Tier Hybrid Pipeline</strong>:
+        </p>
+
         <div class="step-card">
           <div class="step-num">0</div>
           <div>
-            <strong>AI Gatekeeper & Vision Filter:</strong> Intercepts non-recruitment submissions (recipes, candidate CVs, casual chats) to eliminate false positives before scoring.
+            <strong>AI Gatekeeper &amp; Vision Filter:</strong> Intercepts non-recruitment submissions (recipes,
+            candidate CVs, casual chats) to eliminate false positives before scoring.
           </div>
         </div>
         <div class="step-card">
           <div class="step-num">1</div>
           <div>
-            <strong>Unicode & Script Normalizer:</strong> Strips zero-width exploits, homoglyphs (Cyrillic lookalikes), leetspeak, and resolves Indian phone & currency constructs with exact character mapping.
+            <strong>Unicode &amp; Script Normalizer:</strong> Strips zero-width exploits, homoglyphs (Cyrillic
+            lookalikes), leetspeak, and resolves Indian phone &amp; currency constructs with exact character mapping.
           </div>
         </div>
         <div class="step-card">
           <div class="step-num">2</div>
           <div>
-            <strong>Calibrated ML Classifier:</strong> Isotonic-calibrated Logistic Regression with sublinear TF-IDF trained on EMSCAD and real-world Indian scam datasets. Provides linear-time XAI explainability.
+            <strong>Calibrated ML Classifier:</strong> Isotonic-calibrated Logistic Regression with sublinear TF-IDF
+            trained on EMSCAD and real-world Indian scam datasets. Provides linear-time XAI explainability.
           </div>
         </div>
         <div class="step-card">
           <div class="step-num">3</div>
           <div>
-            <strong>Multilingual Heuristic Engine:</strong> 42 YAML-compiled regex patterns targeting Indian scam vectors in English, Hindi (Devanagari), Malayalam, and Hinglish/Manglish.
+            <strong>Multilingual Heuristic Engine:</strong> 42 YAML-compiled regex patterns targeting Indian scam
+            vectors in English, Hindi (Devanagari), Malayalam, and Hinglish/Manglish.
           </div>
         </div>
         <div class="step-card">
           <div class="step-num">4</div>
           <div>
-            <strong>Domain, Identity & Threat DB:</strong> Damerau-Levenshtein typosquat checks against 100+ top employers, free-email spoof detection, and salted SHA-256 community blacklist lookups.
+            <strong>Domain, Identity &amp; Threat DB:</strong> Damerau-Levenshtein typosquat checks against 100+ top
+            employers, free-email spoof detection, and salted SHA-256 community blacklist lookups.
           </div>
         </div>
       </div>
@@ -562,26 +662,30 @@
     <div class="modal-backdrop" onclick="closeModal('gemini-modal')"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h3>✨ Google Gemini AI Gatekeeper</h3>
+        <h3>Google Gemini AI Gatekeeper</h3>
         <button class="modal-close" onclick="closeModal('gemini-modal')">✕</button>
       </div>
       <div class="modal-body">
         <p class="modal-hint">
-          Configure Google Gemini (<code>gemini-1.5-flash</code>) for cloud multimodal screenshot scanning and semantic content classification.
+          Google Gemini (<code>gemini-2.5-flash</code>) provides optional cloud multimodal screenshot scanning and
+          semantic content classification.
         </p>
         <div class="modal-status-box" id="modal-status-box">
           <span class="modal-status-dot" id="modal-status-dot"></span>
           <span id="modal-status-text">Checking status...</span>
         </div>
-        <div class="form-group" style="margin-top: 14px;">
-          <label for="gemini-key-input">Gemini API Key (Optional):</label>
-          <input type="password" id="gemini-key-input" placeholder="AIzaSy..." />
-          <p class="field-hint">If left empty, LeakedIn automatically operates with the zero-config offline heuristic gatekeeper.</p>
+        <div
+          style="margin-top: 14px; font-size: 0.85rem; line-height: 1.5; color: hsl(var(--foreground)); background: hsl(var(--input)); padding: 12px; border: 1px solid hsl(var(--border));">
+          <strong style="color: hsl(var(--primary)); display: block; margin-bottom: 4px;">Environment-Only
+            Configuration</strong>
+          <p style="margin: 0 0 6px 0;">To enable Gemini, set <code>GEMINI_API_KEY=your_key</code> in your local
+            <code>.env</code> file and restart the backend. Keys cannot be submitted via the browser.
+          </p>
+          <p style="margin: 0;">Without a key, LeakedIn runs completely offline using local linguistic heuristics.</p>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary-sm" onclick="clearGeminiKey()">Clear Key</button>
-        <button class="btn-primary-sm" onclick="saveGeminiKey()">Save & Apply</button>
+        <button class="btn-primary-sm" onclick="closeModal('gemini-modal')">Close</button>
       </div>
     </div>
   </div>
@@ -591,12 +695,13 @@
     <div class="modal-backdrop" onclick="closeModal('report-modal')"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h3>🚨 <span data-i18n="modal_report_title">Report Scammer Entity</span></h3>
+        <h3><span data-i18n="modal_report_title">Report Scammer Entity</span></h3>
         <button class="modal-close" onclick="closeModal('report-modal')">✕</button>
       </div>
       <div class="modal-body">
         <p class="modal-hint" data-i18n="modal_report_desc">
-          Add a phone number, UPI ID, or domain to our local community blacklist. Entities are cryptographically hashed (salted SHA-256) — no raw message text is saved.
+          Add a phone number, UPI ID, or domain to our local community blacklist. Entities are cryptographically hashed
+          (salted SHA-256) — no raw message text is saved.
         </p>
         <div class="form-group">
           <label for="report-entity-type">Entity Type:</label>
@@ -618,7 +723,8 @@
       </div>
       <div class="modal-footer">
         <button class="btn-secondary-sm" onclick="closeModal('report-modal')">Cancel</button>
-        <button class="btn-danger-sm" onclick="submitCommunityReport()" data-i18n="btn_submit_report">Submit to Blacklist</button>
+        <button class="btn-danger-sm" onclick="submitCommunityReport()" data-i18n="btn_submit_report">Submit to
+          Blacklist</button>
       </div>
     </div>
   </div>
@@ -628,7 +734,7 @@
     <div class="modal-backdrop" onclick="closeModal('feedback-modal')"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h3>💬 <span data-i18n="modal_feedback_title">Detection Feedback</span></h3>
+        <h3><span data-i18n="modal_feedback_title">Detection Feedback</span></h3>
         <button class="modal-close" onclick="closeModal('feedback-modal')">✕</button>
       </div>
       <div class="modal-body">
@@ -636,20 +742,21 @@
         <div class="feedback-options">
           <label class="feedback-radio">
             <input type="radio" name="feedback_type" value="correct" checked />
-            <span>✅ Accurate / Correct Verdict</span>
+            <span>Accurate / Correct Verdict</span>
           </label>
           <label class="feedback-radio">
             <input type="radio" name="feedback_type" value="missed_scam" />
-            <span>⚠️ False Negative (Missed a real scam)</span>
+            <span>False Negative (Missed a real scam)</span>
           </label>
           <label class="feedback-radio">
             <input type="radio" name="feedback_type" value="false_positive" />
-            <span>❌ False Positive (Flagged a legitimate job)</span>
+            <span>False Positive (Flagged a legitimate job)</span>
           </label>
         </div>
         <div class="form-group-checkbox">
           <input type="checkbox" id="feedback-opt-in" />
-          <label for="feedback-opt-in">Opt-in: Share sanitized text snippet to the private review queue for retraining.</label>
+          <label for="feedback-opt-in">Opt-in: Share sanitized text snippet to the private review queue for
+            retraining.</label>
         </div>
       </div>
       <div class="modal-footer">
@@ -662,18 +769,24 @@
   <!-- 5. POLICE COMPLAINT DRAFT MODAL -->
   <div class="modal" id="complaint-modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal-backdrop" onclick="closeModal('complaint-modal')"></div>
-    <div class="modal-content modal-lg">
+    <div class="modal-content">
       <div class="modal-header">
-        <h3>📋 Cyber Crime / Police Complaint Draft</h3>
-        <button class="modal-close" onclick="closeModal('complaint-modal')">✕</button>
+        <h3><span>Pre-Drafted Police Complaint</span></h3>
+        <button class="modal-close" onclick="closeModal('complaint-modal')" aria-label="Close modal">✕</button>
       </div>
       <div class="modal-body">
-        <p class="modal-hint">Pre-filled complaint draft ready for submission to <strong>cybercrime.gov.in</strong> or your nearest Police Cyber Cell:</p>
-        <textarea id="complaint-text-full" rows="14" class="complaint-textarea" readonly></textarea>
+        <p class="modal-hint">
+          Ready-to-file complaint text formatted for the National Cyber Crime Reporting Portal (cybercrime.gov.in) or
+          your local cyber police station:
+        </p>
+        <div class="form-group">
+          <textarea id="complaint-text-full" rows="10" readonly
+            style="font-family: var(--font-mono); font-size: 11px; width: 100%;"></textarea>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn-secondary-sm" onclick="closeModal('complaint-modal')">Close</button>
-        <button class="btn-primary-sm" onclick="copyCybercrimeDraft()">📋 Copy Draft Text</button>
+        <button class="btn-primary-sm" onclick="copyCybercrimeDraft()">Copy Draft to Clipboard</button>
       </div>
     </div>
   </div>
@@ -683,7 +796,7 @@
     <div class="modal-backdrop" onclick="closeModal('stats-modal')"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h3>📊 Community Threat Intelligence</h3>
+        <h3>Community Threat Intelligence</h3>
         <button class="modal-close" onclick="closeModal('stats-modal')">✕</button>
       </div>
       <div class="modal-body">
@@ -716,10 +829,19 @@
 
   <!-- FOOTER -->
   <footer class="footer">
-    <p>🛡️ <strong>LeakedIn</strong> &mdash; Production AI Recruitment Security &bull; Built for Hackathena 2.0</p>
-    <p class="footer-sub">Privacy-First &bull; Zero permanent text retention &bull; Not affiliated with LinkedIn Corporation.</p>
+    <div class="footer-inner">
+      <div class="footer-left">
+        <img src="/static/assets/brand/logo-mark.svg" alt="LeakedIn" width="16" height="16"
+          style="vertical-align: middle; margin-right: 6px;" /><strong>LEAKEDIN // HACKATHENA 2.0</strong> &mdash;
+        Production AI Recruitment Security
+      </div>
+      <div class="footer-right">
+        <span>MIT LICENSE</span> &bull; <span>OFFLINE BY DEFAULT</span> &bull; <span>ZERO TRACKING</span>
+      </div>
+    </div>
   </footer>
 
-  <script src="app.js"></script>
+  <script src="/static/app.js"></script>
 </body>
+
 </html>

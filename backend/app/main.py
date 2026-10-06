@@ -107,6 +107,9 @@ if os.path.exists(_frontend_dir):
     _assets_dir = os.path.join(_frontend_dir, "assets")
     if os.path.exists(_assets_dir):
         app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
+    _fonts_dir = os.path.join(_frontend_dir, "fonts")
+    if os.path.exists(_fonts_dir):
+        app.mount("/fonts", StaticFiles(directory=_fonts_dir), name="fonts")
 
 
 @app.get("/health", tags=["System"], summary="Health check")
