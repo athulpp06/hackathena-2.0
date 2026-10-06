@@ -373,26 +373,6 @@
 
           <ul class="advice-list" id="advice-list"></ul>
 
-          <!-- HELPLINE 1930 CALLOUT -->
-          <div class="helpline-callout" id="helpline-callout">
-            <div class="helpline-left">
-              <span class="helpline-badge">🚨 1930</span>
-              <div>
-                <strong data-i18n="helpline_title">National Cyber Crime Reporting Helpline</strong>
-                <p data-i18n="helpline_desc">
-                  If money was transferred or sensitive IDs were leaked, dial 1930 immediately or file an incident at <strong>cybercrime.gov.in</strong>.
-                </p>
-              </div>
-            </div>
-            <div class="helpline-actions">
-              <button class="btn-secondary-sm" onclick="copyCybercrimeDraft()" type="button" data-i18n="btn_copy_police">
-                📋 Copy Police Complaint
-              </button>
-              <button class="btn-outline-sm" onclick="openModal('complaint-modal')" type="button">
-                👁️ View Draft
-              </button>
-            </div>
-          </div>
         </div>
 
         <!-- 4. EXPLAINABLE ML (XAI) -->
@@ -658,24 +638,6 @@
     </div>
   </div>
 
-  <!-- 5. POLICE COMPLAINT DRAFT MODAL -->
-  <div class="modal" id="complaint-modal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal-backdrop" onclick="closeModal('complaint-modal')"></div>
-    <div class="modal-content modal-lg">
-      <div class="modal-header">
-        <h3>📋 Cyber Crime / Police Complaint Draft</h3>
-        <button class="modal-close" onclick="closeModal('complaint-modal')">✕</button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-hint">Pre-filled complaint draft ready for submission to <strong>cybercrime.gov.in</strong> or your nearest Police Cyber Cell:</p>
-        <textarea id="complaint-text-full" rows="14" class="complaint-textarea" readonly></textarea>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-secondary-sm" onclick="closeModal('complaint-modal')">Close</button>
-        <button class="btn-primary-sm" onclick="copyCybercrimeDraft()">📋 Copy Draft Text</button>
-      </div>
-    </div>
-  </div>
 
   <!-- 6. THREAT DB STATS MODAL -->
   <div class="modal" id="stats-modal" role="dialog" aria-modal="true" aria-hidden="true">

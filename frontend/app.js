@@ -1176,7 +1176,8 @@ function openModal(id) {
   modal.setAttribute("aria-hidden", "false");
 
   if (id === "complaint-modal") {
-    document.getElementById("complaint-text-full").value = currentPoliceDraft || "No complaint draft available.";
+    const el = document.getElementById("complaint-text-full");
+    if (el) el.value = currentPoliceDraft || "No complaint draft available.";
   }
 }
 
