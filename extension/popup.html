@@ -3,42 +3,76 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>LeakedIn Popup</title>
+  <title>LeakedIn Job Shield</title>
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
   <div class="popup-container">
+    <!-- Header -->
     <header class="popup-header">
       <div class="logo">
-        <span class="icon">🛡️</span>
-        <strong>LeakedIn</strong>
+        <img src="icons/icon32.png" alt="LeakedIn" class="logo-mark" width="24" height="24" style="border-radius: 4px;" />
+        <div class="logo-text">
+          <strong>LeakedIn</strong>
+          <span class="subtext">Job Scam Detector</span>
+        </div>
       </div>
-      <button id="btn-settings-toggle" class="btn-icon" title="Configure API Endpoint">⚙️</button>
+      <button id="btn-settings-toggle" class="btn-icon" title="Configure API Endpoint" aria-label="Settings">⚙️</button>
     </header>
 
     <!-- Settings Pane (Collapsible) -->
     <div id="settings-pane" class="settings-pane" style="display:none;">
-      <label for="api-base-input">API Base URL:</label>
+      <label for="api-base-input">LeakedIn API Base URL</label>
       <div class="settings-row">
-        <input type="text" id="api-base-input" value="http://localhost:8000" />
-        <button id="btn-save-settings">Save</button>
+        <input type="url" id="api-base-input" placeholder="http://localhost:8000" autocomplete="off" spellcheck="false" />
+        <button id="btn-save-settings" type="button">Save</button>
       </div>
+      <div id="settings-status" class="settings-status" style="display:none;"></div>
     </div>
 
-    <!-- Quick Scan Input -->
+    <!-- Scan Input Section -->
     <div class="input-section">
-      <textarea id="popup-text-input" placeholder="Paste a snippet or message to scan... (Or right-click any selected text on the page)" rows="4"></textarea>
-      <button id="btn-quick-scan" class="btn-scan">🔍 Scan with LeakedIn</button>
+      <div class="input-header">
+        <label for="popup-text-input">Paste Job Posting Text</label>
+        <span id="char-counter" class="char-counter">0 chars</span>
+      </div>
+      <textarea id="popup-text-input" placeholder="Paste full job posting description here to scan for scam patterns, upfront fee demands, or fake recruiters..." rows="4"></textarea>
+      <button id="btn-scan" class="btn-scan" type="button">
+        <span class="btn-icon-text">🔍</span>
+        <span>Scan Job Posting</span>
+      </button>
     </div>
 
     <!-- Loading State -->
     <div id="popup-loading" class="popup-loading" style="display:none;">
       <div class="spinner"></div>
-      <span>Scanning against ML + 40+ Indian scam rules...</span>
+      <div class="loading-text">
+        <strong>Analyzing job posting...</strong>
+        <span>Scanning against ML model and Indian recruitment scam rules</span>
+      </div>
     </div>
 
-    <!-- Result Display -->
-    <div id="popup-result" class="popup-result" style="display:none;">
+    <!-- Warning / Truncation Banner -->
+    <div id="popup-warning" class="banner-warning" style="display:none;"></div>
+
+    <!-- Error State -->
+    <div id="popup-error" class="banner-error" style="display:none;">
+      <strong id="error-title">⚠️ Scan Failed</strong>
+      <p id="error-message"></p>
+    </div>
+
+    <!-- Gatekeeper Rejection View -->
+    <div id="gatekeeper-view" class="card-gatekeeper" style="display:none;">
+      <div class="gk-header">
+        <span class="gk-icon">⚠️</span>
+        <strong>This doesn't look like a job posting</strong>
+      </div>
+      <p id="gatekeeper-reason" class="gk-reason"></p>
+      <div id="gatekeeper-recommendation" class="gk-rec" style="display:none;"></div>
+    </div>
+
+    <!-- Analysis Result View -->
+    <div id="analysis-view" class="card-result" style="display:none;">
       <div class="result-header">
         <div id="score-badge" class="score-badge">0</div>
         <div class="result-meta">
@@ -47,15 +81,37 @@
         </div>
       </div>
 
-      <div id="popup-flags" class="popup-flags"></div>
+      <!-- Red Flags Section -->
+      <div id="red-flags-section" class="flags-section" style="display:none;">
+        <div id="red-flags-title" class="section-title text-red">🚩 Red Flags:</div>
+        <div id="red-flags-list" class="flags-list"></div>
+      </div>
 
-      <a id="btn-open-dashboard" href="http://localhost:5500" target="_blank" class="btn-dashboard">
-        Open Full Dashboard & Advice ↗
-      </a>
+      <!-- Domain Flags Section -->
+      <div id="domain-flags-section" class="flags-section" style="display:none;">
+        <div id="domain-flags-title" class="section-title text-amber">🌐 Domain Flags:</div>
+        <div id="domain-flags-list" class="flags-list"></div>
+      </div>
+
+      <!-- First Recommendation -->
+      <div id="recommendation-box" class="recommendation-box" style="display:none;">
+        <strong class="rec-label">💡 Advice: </strong>
+        <span id="recommendation-text"></span>
+      </div>
+
+      <!-- 1930 Cybercrime Helpline Notice -->
+      <div id="helpline-notice" class="helpline-notice" style="display:none;">
+        <div class="helpline-header">
+          <span>🚨</span>
+          <strong>1930 Cybercrime Helpline</strong>
+        </div>
+        <p>If you were asked to deposit money, share OTPs, or send copies of your Aadhaar/PAN, call <strong>1930</strong> immediately or report the fraud at <a href="https://cybercrime.gov.in" target="_blank" rel="noopener">cybercrime.gov.in</a>.</p>
+      </div>
     </div>
 
+    <!-- Footer -->
     <footer class="popup-footer">
-      <span>🔒 In-memory analysis. Zero data stored.</span>
+      <span>🔒 In-memory analysis. Zero scanned text stored.</span>
     </footer>
   </div>
 

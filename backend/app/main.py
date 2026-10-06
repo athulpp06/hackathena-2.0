@@ -104,6 +104,9 @@ app.include_router(router, prefix="/api/v1")
 _frontend_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend"))
 if os.path.exists(_frontend_dir):
     app.mount("/static", StaticFiles(directory=_frontend_dir), name="static")
+    _assets_dir = os.path.join(_frontend_dir, "assets")
+    if os.path.exists(_assets_dir):
+        app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
 
 
 @app.get("/health", tags=["System"], summary="Health check")
@@ -152,5 +155,13 @@ async def get_js():
     js_path = os.path.join(_frontend_dir, "app.js")
     if os.path.exists(js_path):
         return FileResponse(js_path, media_type="application/javascript")
+    return Response(status_code=404)
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def get_favicon():
+    fav_path = os.path.join(_frontend_dir, "assets", "brand", "favicon.ico")
+    if os.path.exists(fav_path):
+        return FileResponse(fav_path, media_type="image/x-icon")
     return Response(status_code=404)
 

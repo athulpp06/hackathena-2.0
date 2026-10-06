@@ -34,9 +34,9 @@ let currentPoliceDraft = "";
 // ==========================================================================
 const I18N = {
   en: {
-    tagline_badge: "AI Scam Shield",
+    tagline_badge: "Job Scam Detector",
     header_sub: "Multi-layered detection for fraudulent job postings, fake offer letters, WhatsApp recruitment traps, and identity theft.",
-    privacy_note: "<strong>Privacy First:</strong> Text & documents are analyzed purely in-memory. Zero user data is stored on this server.",
+    privacy_note: "<strong>Privacy:</strong> Runs offline by default with zero permanent storage. If Gemini Cloud is enabled, input is sent to Google for analysis.",
     btn_how_it_works: "How It Works",
     sample_title: "Instant Demo Presets:",
     sample_hint: "Select a realistic test case to populate inputs:",
@@ -48,9 +48,9 @@ const I18N = {
     btn_scan_url: "Scrape & Analyze URL",
     btn_scan_image: "Run Offline OCR & Scan",
     btn_scan_doc: "Analyze Offer Letter",
-    url_hint: "🛡️ Protected with SSRF safeguards. If blocked by authentication (LinkedIn, Naukri), copy and paste the text directly into the Text tab.",
+    url_hint: "Protected with SSRF safeguards. If blocked by authentication (LinkedIn, Naukri), copy and paste the text directly into the Text tab.",
     upload_img_title: "Click to upload or drag & drop a screenshot",
-    upload_img_hint: "Supports JPG, PNG, WEBP • Press Ctrl+V to paste directly • 100% offline local OCR",
+    upload_img_hint: "Supports JPG, PNG, WEBP • Press Ctrl+V to paste directly • Runs offline by default (Gemini vision optional)",
     upload_doc_title: "Upload Offer Letter or Contract (PDF / DOCX)",
     upload_doc_hint: "Max 5 MB • Analyzes CIN/GST, suspicious signatory clauses, metadata mismatches & layout",
     loading_text: "Analyzing content across ML and Heuristic intelligence layers...",
@@ -59,18 +59,18 @@ const I18N = {
     scale_low: "Low Risk (26-50)",
     scale_suspicious: "Suspicious (51-75)",
     scale_high: "High Risk (76-100)",
-    metric_ml: "🤖 ML Fraud Likelihood",
-    metric_rules: "🚩 Triggered Rules",
-    metric_calib: "🎯 Calibrated Confidence",
+    metric_ml: "ML Fraud Likelihood",
+    metric_rules: "Triggered Rules",
+    metric_calib: "Calibrated Confidence",
     advice_title: "What You Should Do Next",
     urgent_label: "CRITICAL NOTICE:",
     helpline_title: "National Cyber Crime Reporting Helpline",
     helpline_desc: "If money was transferred or sensitive IDs were leaked, dial 1930 immediately or file an incident at cybercrime.gov.in.",
-    btn_copy_police: "📋 Copy Police Complaint",
+    btn_copy_police: "Copy Police Complaint",
     xai_title: "Why the Machine Learning Model Flagged This",
     xai_desc: "Top vocabulary tokens and n-grams influencing the model weights for this prediction:",
-    xai_fraud_col: "⚠️ Scam-Associated Triggers:",
-    xai_legit_col: "✅ Legitimacy Indicators:",
+    xai_fraud_col: "Scam-Associated Triggers:",
+    xai_legit_col: "Legitimacy Indicators:",
     entities_title: "Extracted Entities & Community Reputation Intelligence",
     entities_desc: "Identified contact points cross-checked against our community blacklist database:",
     domain_title: "Domain & Corporate Identity Verification",
@@ -93,7 +93,7 @@ const I18N = {
   hi: {
     tagline_badge: "एआई स्कैम शील्ड",
     header_sub: "फर्जी नौकरी विज्ञापनों, नकली ऑफर लेटर, व्हाट्सएप भर्ती जाल और पहचान चोरी की बहुस्तरीय पहचान।",
-    privacy_note: "<strong>गोपनीयता सर्वोपरि:</strong> टेक्स्ट और दस्तावेज़ों का केवल मेमोरी में विश्लेषण किया जाता है। सर्वर पर कोई डेटा संग्रहीत नहीं होता।",
+    privacy_note: "<strong>गोपनीयता:</strong> डिफ़ॉल्ट रूप से शून्य डेटा भंडारण के साथ ऑफ़लाइन चलता है। जेमिनी सक्षम होने पर टेक्स्ट/स्क्रीनशॉट गूगल को भेजे जाते हैं।",
     btn_how_it_works: "यह कैसे काम करता है",
     sample_title: "त्वरित डेमो नमूने:",
     sample_hint: "परीक्षण के लिए एक यथार्थवादी उदाहरण चुनें:",
@@ -107,7 +107,7 @@ const I18N = {
     btn_scan_doc: "ऑफर लेटर की जांच करें",
     url_hint: "SSRF सुरक्षा से सुरक्षित। यदि लॉगिन की आवश्यकता है, तो टेक्स्ट कॉपी करके पेस्ट करें।",
     upload_img_title: "स्क्रीनशॉट अपलोड करने के लिए क्लिक करें या ड्रैग करें",
-    upload_img_hint: "JPG, PNG, WEBP • स्थानीय EasyOCR के माध्यम से 100% ऑफ़लाइन चलता है",
+    upload_img_hint: "JPG, PNG, WEBP • डिफ़ॉल्ट रूप से ऑफ़लाइन चलता है (जेमिनी विज़न वैकल्पिक)",
     upload_doc_title: "ऑफर लेटर या अनुबंध अपलोड करें (PDF / DOCX)",
     upload_doc_hint: "अधिकतम 5 MB • CIN/GST, हस्ताक्षर और संदिग्ध भुगतान शर्तों की जांच करता है",
     loading_text: "एमएल और नियम-आधारित परतों में विश्लेषण किया जा रहा है...",
@@ -116,18 +116,18 @@ const I18N = {
     scale_low: "कम जोखिम (26-50)",
     scale_suspicious: "संदिग्ध (51-75)",
     scale_high: "अत्यधिक जोखिम (76-100)",
-    metric_ml: "🤖 एमएल धोखाधड़ी संभावना",
-    metric_rules: "🚩 सक्रिय नियम",
-    metric_calib: "🎯 कैलिब्रेटेड विश्वास",
+    metric_ml: "एमएल धोखाधड़ी संभावना",
+    metric_rules: "सक्रिय नियम",
+    metric_calib: "कैलिब्रेटेड विश्वास",
     advice_title: "आपको आगे क्या करना चाहिए",
     urgent_label: "महत्वपूर्ण सूचना:",
     helpline_title: "राष्ट्रीय साइबर अपराध रिपोर्टिंग हेल्पलाइन",
     helpline_desc: "यदि पैसे भेजे गए हैं या दस्तावेज साझा किए गए हैं, तो तुरंत 1930 डायल करें या cybercrime.gov.in पर शिकायत दर्ज करें।",
-    btn_copy_police: "📋 पुलिस शिकायत प्रारूप कॉपी करें",
+    btn_copy_police: "पुलिस शिकायत प्रारूप कॉपी करें",
     xai_title: "मॉडल ने इसे क्यों चिन्हित किया",
     xai_desc: "लॉजिस्टिक रिग्रेशन वर्गीकरण को प्रभावित करने वाले मुख्य शब्द:",
-    xai_fraud_col: "⚠️ स्कैम संकेतक शब्द:",
-    xai_legit_col: "✅ प्रामाणिकता संकेतक शब्द:",
+    xai_fraud_col: "स्कैम संकेतक शब्द:",
+    xai_legit_col: "प्रामाणिकता संकेतक शब्द:",
     entities_title: "निकाले गए संपर्क और प्रतिष्ठा डेटाबेस",
     entities_desc: "हमारे स्थानीय ब्लैकलिस्ट डेटाबेस के खिलाफ जांचे गए संपर्क:",
     domain_title: "डोमेन और कॉर्पोरेट पहचान सत्यापन",
@@ -150,7 +150,7 @@ const I18N = {
   ml: {
     tagline_badge: "എഐ സ്കാം ഷീൽഡ്",
     header_sub: "വ്യാജ ജോലി പരസ്യങ്ങൾ, വ്യാജ ഓഫർ ലെറ്ററുകൾ, വാട്ട്‌സ്ആപ്പ് റിക്രൂട്ട്‌മെന്റ് തട്ടിപ്പുകൾ എന്നിവ കണ്ടെത്താനുള്ള സുരക്ഷാ പ്ലാറ്റ്‌ഫോം.",
-    privacy_note: "<strong>സ്വകാര്യത ആദ്യം:</strong> വിവരങ്ങൾ മെമ്മറിയിൽ മാത്രം പ്രോസസ്സ് ചെയ്യുന്നു. സർവറിൽ ഒന്നും സൂക്ഷിക്കുന്നില്ല.",
+    privacy_note: "<strong>സ്വകാര്യത:</strong> വിവരങ്ങൾ സ്ഥിരമായി സൂക്ഷിക്കാതെ ഓഫ്‌ലൈനിൽ പ്രവർത്തിക്കുന്നു. ജെമിനി പ്രവർത്തനക്ഷമമാക്കിയാൽ ഇൻപുട്ട് ഗൂഗിളിലേക്ക് അയക്കും.",
     btn_how_it_works: "പ്രവർത്തനം എങ്ങനെ",
     sample_title: "ഡെമോ സാമ്പിളുകൾ:",
     sample_hint: "പരിശോധിക്കാൻ ഒരു ഉദാഹരണം തിരഞ്ഞെടുക്കുക:",
@@ -164,7 +164,7 @@ const I18N = {
     btn_scan_doc: "ഓഫർ ലെറ്റർ പരിശോധിക്കുക",
     url_hint: "SSRF സുരക്ഷയുണ്ട്. ലിങ്ക് തുറക്കാൻ കഴിയുന്നില്ലെങ്കിൽ ടെക്സ്റ്റ് നേരിട്ട് കോപ്പി ചെയ്തു നൽകുക.",
     upload_img_title: "സ്ക്രീൻഷോട്ട് അപ്‌ലോഡ് ചെയ്യുക",
-    upload_img_hint: "JPG, PNG, WEBP • പ്രാദേശിക EasyOCR വഴി 100% ഓഫ്‌ലൈനായി പ്രവർത്തിക്കുന്നു",
+    upload_img_hint: "JPG, PNG, WEBP • ഡിഫോൾട്ടായി ഓഫ്‌ലൈനിൽ പ്രവർത്തിക്കുന്നു (ജെമിനി വിഷൻ ഐച്ഛികം)",
     upload_doc_title: "ഓഫർ ലെറ്റർ അപ്‌ലോഡ് ചെയ്യുക (PDF / DOCX)",
     upload_doc_hint: "പരമാവധി 5 MB • രജിസ്ട്രേഷൻ CIN/GST, ഒപ്പ് എന്നിവ പരിശോധിക്കുന്നു",
     loading_text: "വിവിധ സുരക്ഷാ ഘട്ടങ്ങളിലൂടെ പരിശോധിക്കുന്നു...",
@@ -173,18 +173,18 @@ const I18N = {
     scale_low: "കുറഞ്ഞ റിസ്ക് (26-50)",
     scale_suspicious: "സംശയാസ്പദം (51-75)",
     scale_high: "അതീവ റിസ്ക് (76-100)",
-    metric_ml: "🤖 എംഎൽ തട്ടിപ്പ് സാധ്യത",
-    metric_rules: "🚩 കണ്ടെത്തിയ മുന്നറിയിപ്പുകൾ",
-    metric_calib: "🎯 കൃത്യത ഉറപ്പ്",
+    metric_ml: "എംഎൽ തട്ടിപ്പ് സാധ്യത",
+    metric_rules: "കണ്ടെത്തിയ മുന്നറിയിപ്പുകൾ",
+    metric_calib: "കൃത്യത ഉറപ്പ്",
     advice_title: "നിങ്ങൾ ഇനി എന്ത് ചെയ്യണം?",
     urgent_label: "അടിയന്തിര മുന്നറിയിപ്പ്:",
     helpline_title: "ദേശീയ സൈബർ ക്രൈം ഹെൽപ്പ് ലൈൻ",
     helpline_desc: "പണം നഷ്ടപ്പെടുകയോ ആധാർ/പാൻ വിവരങ്ങൾ നൽകുകയോ ചെയ്തിട്ടുണ്ടെങ്കിൽ ഉടൻ 1930 ൽ വിളിക്കുക അല്ലെങ്കിൽ cybercrime.gov.in ൽ പരാതി നൽകുക.",
-    btn_copy_police: "📋 പരാതി ഡ്രാഫ്റ്റ് കോപ്പി ചെയ്യുക",
+    btn_copy_police: "പരാതി ഡ്രാഫ്റ്റ് കോപ്പി ചെയ്യുക",
     xai_title: "മോഡൽ കണ്ടെത്തിയ കാരണങ്ങൾ",
     xai_desc: "നിഗമനത്തെ സ്വാധീനിച്ച പ്രധാന പദങ്ങൾ:",
-    xai_fraud_col: "⚠️ തട്ടിപ്പ് സൂചകങ്ങൾ:",
-    xai_legit_col: "✅ വിശ്വസനീയ സൂചകങ്ങൾ:",
+    xai_fraud_col: "തട്ടിപ്പ് സൂചകങ്ങൾ:",
+    xai_legit_col: "വിശ്വസനീയ സൂചകങ്ങൾ:",
     entities_title: "കണ്ടെത്തിയ വിവരങ്ങളും കരിമ്പട്ടികയും",
     entities_desc: "കമ്മ്യൂണിറ്റി കരിമ്പട്ടികയുമായി താരതമ്യം ചെയ്ത വിവരങ്ങൾ:",
     domain_title: "ഡൊമെയ്ൻ സ്ഥിരീകരണം",
@@ -228,7 +228,7 @@ function changeLanguage(lang) {
 const SAMPLES = [
   {
     id: "scam_whatsapp",
-    title: "⚠️ WhatsApp Kit Fee Scam",
+    title: "WhatsApp Kit Fee Scam",
     badge: "critical",
     badgeText: "SCAM",
     company: "TCS",
@@ -241,7 +241,7 @@ Send your CV on WhatsApp: +91 98765 43210 or email hr.tcs.recruiter@gmail.com.`
   },
   {
     id: "scam_malayalam",
-    title: "🌴 Malayalam Task Scam",
+    title: "Malayalam Task Scam",
     badge: "high",
     badgeText: "MALAYALAM",
     company: "IT Solutions Kerala",
@@ -254,7 +254,7 @@ Send your CV on WhatsApp: +91 98765 43210 or email hr.tcs.recruiter@gmail.com.`
   },
   {
     id: "scam_hindi",
-    title: "🇮🇳 Hindi Part-Time Scam",
+    title: "Hindi Part-Time Scam",
     badge: "high",
     badgeText: "HINDI",
     company: "TCS India",
@@ -267,7 +267,7 @@ Send your CV on WhatsApp: +91 98765 43210 or email hr.tcs.recruiter@gmail.com.`
   },
   {
     id: "real_stripe",
-    title: "✅ Legit Stripe Job",
+    title: "Legit Stripe Job",
     badge: "safe",
     badgeText: "LEGIT",
     company: "Stripe",
@@ -298,7 +298,7 @@ For questions, contact our recruiting team at recruiting@stripe.com`
   },
   {
     id: "gatekeeper_recipe",
-    title: "🍲 Recipe (Gatekeeper Demo)",
+    title: "Recipe (Gatekeeper Demo)",
     badge: "other",
     badgeText: "NON-JOB",
     company: "",
@@ -451,7 +451,7 @@ window.addEventListener("paste", (e) => {
       if (blob) {
         switchTab("image");
         processImageFile(blob);
-        showToast("Pasted screenshot from clipboard! 📋", "success");
+        showToast("Pasted screenshot from clipboard!", "success");
         break;
       }
     }
@@ -611,10 +611,10 @@ function renderResults(data, latencyMs) {
 
   // Latency & Language tags
   const timingEl = document.getElementById("timing-tag");
-  if (timingEl) timingEl.textContent = `⚡ ${latencyMs}ms`;
+  if (timingEl) timingEl.textContent = `${latencyMs}ms`;
 
   const langEl = document.getElementById("detected-lang-tag");
-  if (langEl) langEl.textContent = `🌐 Lang: ${(data.language || "EN").toUpperCase()}`;
+  if (langEl) langEl.textContent = `Lang: ${(data.language || "EN").toUpperCase()}`;
 
   // Verified Recruitment Content pill
   if (data.gatekeeper) {
@@ -911,11 +911,11 @@ function renderDocForensics(data) {
       </div>
       <div class="gk-detail-box">
         <span class="gk-detail-label">Signatory Stamp</span>
-        <strong class="gk-detail-val">${checks.suspicious_signatory ? '⚠️ Anomaly Detected' : 'Verified'}</strong>
+        <strong class="gk-detail-val">${checks.suspicious_signatory ? 'Anomaly Detected' : 'Verified'}</strong>
       </div>
       <div class="gk-detail-box">
         <span class="gk-detail-label">Template Plagiarism</span>
-        <strong class="gk-detail-val">${checks.template_match ? '⚠️ Known Fake Template' : 'Original Format'}</strong>
+        <strong class="gk-detail-val">${checks.template_match ? 'Known Fake Template' : 'Original Format'}</strong>
       </div>
     </div>
   `;
@@ -928,7 +928,7 @@ function copyResultSummary() {
   if (!currentScanResult) return;
   const res = currentScanResult;
 
-  const text = `🛡️ LeakedIn Scam Scan Report
+  const text = `LeakedIn Scam Scan Report
 Risk Score: ${res.risk_score}/100 (${res.risk_level})
 Verdict: ${res.verdict}
 ML Probability: ${Math.round((res.ml_probability || 0) * 100)}%
@@ -936,7 +936,7 @@ Triggered Red Flags: ${res.rule_flag_count || 0}
 Scanned via LeakedIn — AI Recruitment Fraud Detector.`;
 
   navigator.clipboard.writeText(text).then(() => {
-    showToast("Scan summary copied to clipboard! 📋", "success");
+    showToast("Scan summary copied to clipboard!", "success");
   });
 }
 
@@ -948,12 +948,12 @@ function copyCybercrimeDraft() {
   }
 
   navigator.clipboard.writeText(draft).then(() => {
-    showToast("Police complaint draft copied! 📋", "success");
+    showToast("Police complaint draft copied!", "success");
   });
 }
 
 // High-Resolution Canvas PNG Export
-function exportShareablePNG() {
+async function exportShareablePNG() {
   if (!currentScanResult) return;
   const res = currentScanResult;
 
@@ -969,19 +969,46 @@ function exportShareablePNG() {
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, H);
 
-  // Border
-  ctx.strokeStyle = "rgba(99, 102, 241, 0.4)";
+  // Border (Brand Crimson accent)
+  ctx.strokeStyle = "rgba(203, 1, 31, 0.4)";
   ctx.lineWidth = 4;
   ctx.strokeRect(10, 10, W - 20, H - 20);
 
-  // Header Brand
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 28px Inter, sans-serif";
-  ctx.fillText("🛡️ LeakedIn Verification Shield", 40, 60);
+  // Load Brand Logo from same-origin
+  try {
+    const logoImg = await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => {
+        const fallback = new Image();
+        fallback.onload = () => resolve(fallback);
+        fallback.onerror = () => resolve(null);
+        fallback.src = "/static/assets/brand/logo-full.png";
+      };
+      img.src = "/static/assets/brand/logo.svg";
+    });
+
+    if (logoImg) {
+      const logoH = 32;
+      const logoW = Math.round(logoH * (260 / 60)); // ~139px
+      ctx.drawImage(logoImg, 40, 36, logoW, logoH);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 20px Inter, sans-serif";
+      ctx.fillText("— Verification Shield", 40 + logoW + 12, 59);
+    } else {
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 26px Inter, sans-serif";
+      ctx.fillText("LeakedIn Verification Shield", 40, 60);
+    }
+  } catch (err) {
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 26px Inter, sans-serif";
+    ctx.fillText("LeakedIn Verification Shield", 40, 60);
+  }
 
   ctx.fillStyle = "#94a3b8";
   ctx.font = "14px Inter, sans-serif";
-  ctx.fillText("AI-Powered Recruitment Fraud Analysis • Hackathena 2.0", 40, 85);
+  ctx.fillText("AI-Powered Recruitment Fraud Analysis • Hackathena 2.0", 40, 92);
 
   // Score Box
   const score = Math.round(res.risk_score || 0);
@@ -1039,7 +1066,7 @@ function exportShareablePNG() {
   link.download = `LeakedIn_Verification_${score}_Risk.png`;
   link.href = canvas.toDataURL("image/png");
   link.click();
-  showToast("Shareable card downloaded! 🖼️", "success");
+  showToast("Shareable card downloaded!", "success");
 }
 
 function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -1083,7 +1110,7 @@ async function submitCommunityReport() {
 
     if (resp.ok) {
       closeModal("report-modal");
-      showToast("Entity reported to threat database! 🚨", "success");
+      showToast("Entity reported to threat database!", "success");
       document.getElementById("report-entity-val").value = "";
       document.getElementById("report-notes").value = "";
     } else {
@@ -1110,7 +1137,7 @@ async function submitFeedback() {
       })
     });
     closeModal("feedback-modal");
-    showToast("Thank you for your feedback! 💬", "success");
+    showToast("Thank you for your feedback!", "success");
   } catch (err) {
     closeModal("feedback-modal");
     showToast("Feedback recorded locally.", "info");
@@ -1166,29 +1193,6 @@ async function fetchGatekeeperStatus() {
   }
 }
 
-async function saveGeminiKey() {
-  const key = document.getElementById("gemini-key-input").value.trim();
-  try {
-    const resp = await fetch(`${API_BASE}/set-gemini-key`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ api_key: key })
-    });
-    if (resp.ok) {
-      closeModal("gemini-modal");
-      showToast("Gemini API key saved & gatekeeper updated! ✨", "success");
-      fetchGatekeeperStatus();
-    }
-  } catch (err) {
-    showToast("Failed to save Gemini key.", "error");
-  }
-}
-
-async function clearGeminiKey() {
-  document.getElementById("gemini-key-input").value = "";
-  await saveGeminiKey();
-}
-
 // ==========================================================================
 // 9. MODAL & UI HELPERS
 // ==========================================================================
@@ -1199,7 +1203,8 @@ function openModal(id) {
   modal.setAttribute("aria-hidden", "false");
 
   if (id === "complaint-modal") {
-    document.getElementById("complaint-text-full").value = currentPoliceDraft || "No complaint draft available.";
+    const el = document.getElementById("complaint-text-full");
+    if (el) el.value = currentPoliceDraft || "No complaint draft available.";
   }
 }
 

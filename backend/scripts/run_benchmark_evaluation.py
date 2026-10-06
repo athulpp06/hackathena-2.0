@@ -895,17 +895,26 @@ def run_benchmark():
 
     # ── Evaluation Metrics ──────────────────────────────────────────────────
     y_true = res_df["ground_truth"]
+    
+    # ML-Only Evaluation (decision threshold 0.50)
+    y_ml_prob = res_df["ml_fraud_prob"]
+    y_ml_pred = (y_ml_prob >= 0.50).astype(int)
+    ml_acc = accuracy_score(y_true, y_ml_pred)
+    ml_prec = precision_score(y_true, y_ml_pred, zero_division=0)
+    ml_rec = recall_score(y_true, y_ml_pred, zero_division=0)
+    ml_f1 = f1_score(y_true, y_ml_pred, zero_division=0)
+    ml_auc = roc_auc_score(y_true, y_ml_prob)
+    ml_tn, ml_fp, ml_fn, ml_tp = confusion_matrix(y_true, y_ml_pred).ravel()
+
+    # Full Pipeline (Hybrid: Rules + ML + Verification) Evaluation (decision threshold 51)
     y_pred = res_df["pred_label"]
     y_scores = res_df["risk_score"] / 100.0
-
     acc = accuracy_score(y_true, y_pred)
-    prec = precision_score(y_true, y_pred)
-    rec = recall_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred)
+    prec = precision_score(y_true, y_pred, zero_division=0)
+    rec = recall_score(y_true, y_pred, zero_division=0)
+    f1 = f1_score(y_true, y_pred, zero_division=0)
     auc = roc_auc_score(y_true, y_scores)
-
-    cm = confusion_matrix(y_true, y_pred)
-    tn, fp, fn, tp = cm.ravel()
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
 
     # Score statistics
     scam_scores = res_df[res_df["ground_truth"] == 1]["risk_score"]
@@ -914,18 +923,34 @@ def run_benchmark():
     print(f"\nCompleted analysis of {len(res_df)} postings in {elapsed}s.")
 
     print("\n" + "=" * 70)
-    print("[+] BENCHMARK PERFORMANCE REPORT")
+    print("[+] COMPARATIVE BENCHMARK PERFORMANCE REPORT")
     print("=" * 70)
-    print(f"  * Overall Accuracy : {acc:.2%}")
-    print(f"  * Precision (Scam) : {prec:.2%}")
-    print(f"  * Recall (Scam)    : {rec:.2%}")
-    print(f"  * F1-Score (Scam)  : {f1:.4f}")
-    print(f"  * ROC-AUC Score    : {auc:.4f}")
-    print(f"\n  * Confusion Matrix :")
-    print(f"      True Negatives (Legit identified as Safe/Low Risk) : {tn} / 30")
-    print(f"      False Positives (Legit wrongly flagged as Scam)   : {fp} / 30")
-    print(f"      False Negatives (Scams missed)                    : {fn} / 30")
-    print(f"      True Positives (Scams correctly caught)           : {tp} / 30")
+    print(f"{'Metric':<22} {'ML-Only (Isolated)':<22} {'Full Pipeline (Hybrid)':<22}")
+    print("-" * 70)
+    print(f"{'Scam Recall':<22} {ml_rec:>6.2%} ({ml_tp}/{ml_tp+ml_fn})            {rec:>6.2%} ({tp}/{tp+fn})")
+    print(f"{'Scam Precision':<22} {ml_prec:>6.2%}                 {prec:>6.2%}")
+    print(f"{'Scam F1-Score':<22} {ml_f1:>7.4f}                 {f1:>7.4f}")
+    print(f"{'Overall Accuracy':<22} {ml_acc:>6.2%}                 {acc:>6.2%}")
+    print(f"{'ROC-AUC Score':<22} {ml_auc:>7.4f}                 {auc:>7.4f}")
+    print("-" * 70)
+    print(f"Confusion Matrix (TN, FP, FN, TP):")
+    print(f"  * ML-Only       : TN={ml_tn}, FP={ml_fp}, FN={ml_fn}, TP={ml_tp}")
+    print(f"  * Full Pipeline : TN={tn}, FP={fp}, FN={fn}, TP={tp}")
+
+    # False negative analysis: scam samples missed by ML
+    ml_missed = res_df[(res_df["ground_truth"] == 1) & (y_ml_pred == 0)]
+    print("\n" + "-" * 70)
+    print(f"[*] ML FALSE NEGATIVE RESCUE ANALYSIS ({len(ml_missed)} sample(s) missed by ML)")
+    print("-" * 70)
+    if len(ml_missed) == 0:
+        print("  None: ML caught 100% of scam postings.")
+    else:
+        for _, row in ml_missed.iterrows():
+            caught = "RESCUED & CAUGHT" if row["pred_label"] == 1 else "MISSED"
+            print(f"  [{caught}] {row['id']}: {row['title']} ({row['category']})")
+            print(f"      - ML Probability    : {row['ml_fraud_prob']:.4f} (Below 0.50 threshold)")
+            print(f"      - Full Pipeline Score: {row['risk_score']}/100 ({row['risk_level']})")
+            print(f"      - Rules Triggered   : {row['red_flags']}")
 
     print("\n" + "-" * 70)
     print("[*] RISK SCORE SEPARATION")
@@ -963,12 +988,22 @@ def run_benchmark():
         json.dump({
             "metrics": {
                 "total_samples": len(res_df),
-                "accuracy": round(acc, 4),
-                "precision": round(prec, 4),
-                "recall": round(rec, 4),
-                "f1_score": round(f1, 4),
-                "roc_auc": round(auc, 4),
-                "confusion_matrix": {"tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp)},
+                "ml_only": {
+                    "accuracy": round(ml_acc, 4),
+                    "precision": round(ml_prec, 4),
+                    "recall": round(ml_rec, 4),
+                    "f1_score": round(ml_f1, 4),
+                    "roc_auc": round(ml_auc, 4),
+                    "confusion_matrix": {"tn": int(ml_tn), "fp": int(ml_fp), "fn": int(ml_fn), "tp": int(ml_tp)},
+                },
+                "full_pipeline": {
+                    "accuracy": round(acc, 4),
+                    "precision": round(prec, 4),
+                    "recall": round(rec, 4),
+                    "f1_score": round(f1, 4),
+                    "roc_auc": round(auc, 4),
+                    "confusion_matrix": {"tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp)},
+                },
                 "scam_avg_score": round(float(scam_scores.mean()), 1),
                 "legit_avg_score": round(float(legit_scores.mean()), 1),
                 "score_separation": round(float(scam_scores.mean() - legit_scores.mean()), 1),

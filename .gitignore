@@ -7,6 +7,15 @@ venv/
 .env
 data/
 *.csv
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
 
 # Build outputs
 dist/
@@ -21,3 +30,5 @@ Thumbs.db
 
 # Friend's local project folder (do not push to GitHub)
 2.0/
+Template/
+Logo/

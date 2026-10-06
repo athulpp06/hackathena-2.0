@@ -252,6 +252,7 @@ def analyse(
         "verdict": verdict_str,
         # ML metrics
         "ml_probability": ml_prob,
+        "ml_fraud_probability": ml_prob,
         "ml_score_pct": ml_result.get("ml_score_pct", int(round(ml_prob * 100))),
         "ml_verdict": ml_result.get("ml_verdict", "N/A"),
         "ml_confidence": ml_result.get("ml_confidence_level", "MEDIUM"),

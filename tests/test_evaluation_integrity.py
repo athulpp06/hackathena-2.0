@@ -9,7 +9,7 @@ import csv
 import pathlib
 import pytest
 
-DATA_DIR = pathlib.Path(__file__).resolve().parent.parent.parent / "data"
+DATA_DIR = pathlib.Path(__file__).resolve().parent.parent / "data"
 TRAIN_SEEDS_DIR = DATA_DIR / "real_world" / "train_seeds"
 HOLDOUT_DIR = DATA_DIR / "real_world" / "holdout"
 
@@ -80,7 +80,7 @@ def test_no_exact_or_near_duplicate_overlap():
 
 def test_train_pipeline_does_not_load_holdout():
     """Verify static source code of train_pipeline.py never touches holdout directory."""
-    train_script = pathlib.Path(__file__).resolve().parent.parent / "scripts" / "train_pipeline.py"
+    train_script = pathlib.Path(__file__).resolve().parent.parent / "backend" / "scripts" / "train_pipeline.py"
     content = train_script.read_text(encoding="utf-8")
 
     assert "holdout" not in content.lower(), "train_pipeline.py must NEVER reference 'holdout' data!"

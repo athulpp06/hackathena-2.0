@@ -2,7 +2,7 @@
 reputation.py - Community scam reputation database using SQLite.
 
 Privacy model:
-- Identifiers are HMAC-SHA256 hashed using a secret key from the HASH_SECRET env var.
+- Identifiers are HMAC-SHA256 hashed using a secret key from the REPUTATION_SALT env var.
 - Raw values (emails, phones, UPI IDs, domains) are NEVER stored.
 - A report only counts as "known-bad" once 3 DISTINCT reporters have flagged it,
   preventing single-user abuse of the reputation system.
@@ -11,18 +11,40 @@ Privacy model:
 
 import hashlib
 import hmac
+import logging
 import os
+import secrets
 import sqlite3
 from typing import Any
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "db", "reputation.db")
+logger = logging.getLogger(__name__)
 
-# HMAC key: load from environment. Fallback to a deterministic dev default (not for production).
-_HASH_SECRET = os.environ.get("HASH_SECRET", "leakedin-dev-secret-change-in-production").encode()
+DB_PATH = os.environ.get(
+    "REPUTATION_DB_PATH",
+    os.path.join(os.path.dirname(__file__), "..", "..", "db", "reputation.db"),
+)
 
 # Minimum distinct reporters before an identifier is flagged as known-bad.
 # Prevents a single abusive user from blacklisting legitimate recruiters.
 MIN_REPORTERS_THRESHOLD = int(os.environ.get("MIN_REPORTERS_THRESHOLD", "1"))
+
+
+def get_reputation_salt() -> bytes:
+    """
+    Retrieve HMAC salt from REPUTATION_SALT (or legacy HASH_SECRET) environment variable.
+    If missing, generates a secure random 32-byte hex salt for the session and logs a warning.
+    Never uses a hardcoded secret.
+    """
+    salt = os.environ.get("REPUTATION_SALT") or os.environ.get("HASH_SECRET")
+    if not salt:
+        random_salt = secrets.token_hex(32)
+        os.environ["REPUTATION_SALT"] = random_salt
+        logger.warning(
+            "REPUTATION_SALT not set in environment! Generated ephemeral random salt for this session. "
+            "Set REPUTATION_SALT in .env for persistent hash lookups across restarts."
+        )
+        salt = random_salt
+    return salt.encode("utf-8")
 
 
 def _get_conn() -> sqlite3.Connection:
@@ -34,16 +56,16 @@ def _get_conn() -> sqlite3.Connection:
 
 def _hash_identifier(value: str) -> str:
     """HMAC-SHA256 of the identifier. Never stores raw PII."""
-    return hmac.new(_HASH_SECRET, value.lower().strip().encode(), hashlib.sha256).hexdigest()
+    return hmac.new(get_reputation_salt(), value.lower().strip().encode(), hashlib.sha256).hexdigest()
 
 
 def _hash_reporter(reporter_id: str) -> str:
     """HMAC-SHA256 of the reporter identifier. Prevents counting same reporter twice."""
-    return hmac.new(_HASH_SECRET, f"reporter:{reporter_id}".encode(), hashlib.sha256).hexdigest()
+    return hmac.new(get_reputation_salt(), f"reporter:{reporter_id}".encode(), hashlib.sha256).hexdigest()
 
 
 def init_db() -> None:
-    """Create tables and seed with synthetic scam indicators (3+ reporters each)."""
+    """Create tables with empty schema on first run."""
     with _get_conn() as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS reputation (
@@ -72,21 +94,6 @@ def init_db() -> None:
         except sqlite3.OperationalError:
             pass  # Column already exists
 
-        # Seed with synthetic scam indicators — pre-seeded with 3 reports to meet threshold
-        synthetic_scams = [
-            ("scammer@gmail.com", "email"),
-            ("9999999999", "phone"),
-            ("fakehr@yopmail.com", "email"),
-            ("fraudupi@okaxis", "upi"),
-            ("amazon-careers-hr.xyz", "domain"),
-        ]
-        for value, etype in synthetic_scams:
-            h = _hash_identifier(value)
-            conn.execute(
-                """INSERT OR IGNORE INTO reputation (hash, entity_type, report_count, distinct_reporter_count)
-                   VALUES (?, ?, 3, 3)""",
-                (h, etype),
-            )
         conn.commit()
 
 
