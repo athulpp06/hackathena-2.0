@@ -368,12 +368,13 @@ async def api_stats(request: Request) -> Dict[str, Any]:
 async def gatekeeper_status(x_gemini_key: Optional[str] = Header(None)) -> Dict[str, Any]:
     key = x_gemini_key or gatekeeper.get_gemini_api_key()
     has_key = bool(key and len(key.strip()) > 10)
+    current_model = gatekeeper.get_gemini_model()
     return {
         "gemini_active": has_key,
         "mode": "multimodal_gemini_ai" if has_key else "offline_heuristic_classifier",
-        "model": "gemini-1.5-flash" if has_key else "builtin_offline_rules",
+        "model": current_model if has_key else "builtin_offline_rules",
         "vision_supported": has_key,
-        "message": "Gemini 1.5 Flash multimodal gatekeeper active" if has_key else "Operating in zero-config offline gatekeeper mode",
+        "message": f"Gemini ({current_model}) multimodal gatekeeper active" if has_key else "Operating in zero-config offline gatekeeper mode",
     }
 
 

@@ -79,7 +79,7 @@
 
 ### 1. AI Gatekeeper (`backend/app/detector/gatekeeper.py`)
 - **Semantic Noise Rejection**: Eliminates false positives by determining whether an input represents genuine employment recruitment before calculating fraud scores.
-- **Dual-Engine Execution**: Operates offline by default using built-in linguistic heuristics. If `GEMINI_API_KEY` is configured in the environment, Google Gemini Cloud Multimodal Vision can optionally be used (transmitting text/screenshots to Google).
+- **Dual-Engine Execution**: Operates offline by default using built-in linguistic heuristics. If `GEMINI_API_KEY` is configured in the environment, Google Gemini Cloud Multimodal Vision (configurable via `GEMINI_MODEL`, defaulting to `gemini-2.5-flash`) can optionally be used (transmitting text/screenshots to Google).
 
 ### 2. Calibrated Machine Learning & XAI (`backend/app/detector/ml.py`)
 - **Training Pipeline**: Trained on EMSCAD (17,880 postings) augmented with real-world Indian recruitment scams, calibrated via `CalibratedClassifierCV(method='isotonic', cv=5)`.
@@ -113,7 +113,7 @@
 LeakedIn is architected to be **offline-by-default and privacy-respecting**:
 - **Offline by Default**: All machine learning scoring, 42 multilingual rule heuristics (English, Hindi, Malayalam), OCR text extraction, and offer letter forensics execute entirely on the local system without outbound network calls.
 - **Zero Permanent Retention**: User job descriptions, URLs, screenshots, and offer letters are processed in-memory and are never stored to disk or database tables.
-- **Optional Google Gemini Cloud**: The AI Gatekeeper only connects to Google Gemini if `GEMINI_API_KEY` is explicitly configured in your environment. When enabled, job text or screenshots are sent to Google's API for multimodal relevance evaluation. With no key set, the system runs completely offline using local heuristic classifiers.
+- **Optional Google Gemini Cloud**: The AI Gatekeeper only connects to Google Gemini if `GEMINI_API_KEY` is explicitly configured in your environment. The model is configurable via `GEMINI_MODEL` (defaults to `gemini-2.5-flash`). When enabled, job text or screenshots are sent to Google's API for multimodal relevance evaluation. With no key set, the system runs completely offline using local heuristic classifiers.
 - **Privacy-Preserving Threat Intelligence**: Contact identifiers (phones, UPI IDs, domains) submitted to the community database are hashed with a salted SHA-256 HMAC before storage, ensuring no raw personal messages or identifiers are stored.
 
 ---

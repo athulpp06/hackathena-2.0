@@ -4,7 +4,7 @@ Detects whether an uploaded image or text is actually a recruitment / job / inte
 before running fraud detection.
 
 Supports:
-1. Google Gemini Multimodal API (gemini-1.5-flash) for vision and semantic reasoning.
+1. Google Gemini Multimodal API (configurable via GEMINI_MODEL, default: gemini-2.5-flash) for vision and semantic reasoning.
 2. Offline heuristic gatekeeper fallback (zero-config, works without API key or when offline).
 """
 
@@ -23,6 +23,14 @@ except ImportError:
     pass
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+
+
+def get_gemini_model() -> str:
+    """Return configured Gemini model name or default to gemini-2.5-flash."""
+    return os.getenv("GEMINI_MODEL", DEFAULT_GEMINI_MODEL).strip() or DEFAULT_GEMINI_MODEL
+
 
 # Check for Gemini API key
 def get_gemini_api_key() -> str:
@@ -216,9 +224,10 @@ def _classify_with_gemini(
         import google.generativeai as genai
         genai.configure(api_key=api_key)
 
-        # Use fast, cost-efficient gemini-1.5-flash
+        # Use configurable Gemini model (default: gemini-2.5-flash)
+        gemini_model = get_gemini_model()
         model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
+            model_name=gemini_model,
             generation_config={
                 "response_mime_type": "application/json",
                 "temperature": 0.1,
@@ -259,7 +268,7 @@ def _classify_with_gemini(
                 "content_type": data.get("content_type", "unknown"),
                 "confidence": float(data.get("confidence", 0.90)),
                 "reasoning": data.get("reasoning", "Classified via Gemini AI."),
-                "provider": "gemini-1.5-flash",
+                "provider": gemini_model,
                 "extracted_role": data.get("extracted_role"),
                 "extracted_company": data.get("extracted_company"),
                 "gemini_scam_assessment": data.get("gemini_fraud_notes"),
