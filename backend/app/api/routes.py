@@ -83,10 +83,6 @@ class FeedbackRequest(BaseModel):
     raw_text: Optional[str] = Field(default="")
 
 
-class GeminiKeyRequest(BaseModel):
-    api_key: str = Field(..., min_length=10, max_length=200, description="Google Gemini API key")
-
-
 # Aliases for compatibility
 TextAnalysisRequest = JobAnalysisRequest
 UrlAnalysisRequest = URLAnalysisRequest
@@ -134,9 +130,6 @@ def _run_pipeline(
 # Canonical Analysis Implementation & Endpoints
 # ---------------------------------------------------------------------------
 async def _analyze_text_impl(body: JobAnalysisRequest) -> Dict[str, Any]:
-    if body.gemini_api_key and body.gemini_api_key.strip():
-        os.environ["GEMINI_API_KEY"] = body.gemini_api_key.strip()
-
     return _run_pipeline(
         text=body.text,
         company_name=body.company_name or "",
@@ -160,9 +153,6 @@ async def analyse_job(request: Any, body: Optional[JobAnalysisRequest] = None) -
 
 
 async def _analyze_url_impl(body: URLAnalysisRequest) -> Dict[str, Any]:
-    if body.gemini_api_key and body.gemini_api_key.strip():
-        os.environ["GEMINI_API_KEY"] = body.gemini_api_key.strip()
-
     try:
         scraped_text = scrape_job_url(body.url)
     except (BlockedURLError, ScrapingNotAllowedError) as exc:
@@ -203,9 +193,6 @@ async def analyze_image(
     contact_email: str = Form(""),
     gemini_api_key: Optional[str] = Form(""),
 ) -> Dict[str, Any]:
-    if gemini_api_key and gemini_api_key.strip():
-        os.environ["GEMINI_API_KEY"] = gemini_api_key.strip()
-
     content_type = file.content_type or "image/png"
     if not content_type.startswith("image/"):
         raise HTTPException(status_code=415, detail=f"Unsupported file type '{content_type}'. Must be an image.")
@@ -365,8 +352,8 @@ async def api_stats(request: Request) -> Dict[str, Any]:
 # Gatekeeper & OCR System Endpoints
 # ---------------------------------------------------------------------------
 @router.get("/gatekeeper-status", tags=["System"], summary="Check AI Gatekeeper status")
-async def gatekeeper_status(x_gemini_key: Optional[str] = Header(None)) -> Dict[str, Any]:
-    key = x_gemini_key or gatekeeper.get_gemini_api_key()
+async def gatekeeper_status() -> Dict[str, Any]:
+    key = gatekeeper.get_gemini_api_key()
     has_key = bool(key and len(key.strip()) > 10)
     current_model = gatekeeper.get_gemini_model()
     return {
@@ -375,19 +362,6 @@ async def gatekeeper_status(x_gemini_key: Optional[str] = Header(None)) -> Dict[
         "model": current_model if has_key else "builtin_offline_rules",
         "vision_supported": has_key,
         "message": f"Gemini ({current_model}) multimodal gatekeeper active" if has_key else "Operating in zero-config offline gatekeeper mode",
-    }
-
-
-@router.post("/set-gemini-key", tags=["System"], summary="Configure Gemini API key")
-async def set_gemini_key(request: GeminiKeyRequest) -> Dict[str, Any]:
-    key = request.api_key.strip()
-    if len(key) < 15:
-        raise HTTPException(status_code=400, detail="Invalid API key format.")
-    os.environ["GEMINI_API_KEY"] = key
-    return {
-        "status": "configured",
-        "message": "Gemini API key configured for current session.",
-        "gemini_active": True,
     }
 
 

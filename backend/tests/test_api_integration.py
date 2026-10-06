@@ -59,7 +59,18 @@ def test_readme_endpoints_exist_non_404(client):
     assert "risk_distribution" in stats
     assert "top_rule_categories" in stats
 
-    # 10. Deprecated aliases still respond non-404
+    # 10. /gatekeeper-status (must return 200 and never leak keys)
+    r_gk = client.get("/gatekeeper-status")
+    assert r_gk.status_code == 200
+    gk_json = r_gk.json()
+    assert "gemini_active" in gk_json
+    assert "api_key" not in str(gk_json).lower()
+
+    # 11. /set-gemini-key must return 404 (endpoint removed)
+    r_set_key = client.post("/set-gemini-key", json={"api_key": "some_secret_key_123"})
+    assert r_set_key.status_code == 404
+
+    # 12. Deprecated aliases still respond non-404
     r_dep_text = client.post("/analyse-text", json={"text": "Testing deprecated alias"})
     assert r_dep_text.status_code == 200
 

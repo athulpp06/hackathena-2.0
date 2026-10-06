@@ -1166,29 +1166,6 @@ async function fetchGatekeeperStatus() {
   }
 }
 
-async function saveGeminiKey() {
-  const key = document.getElementById("gemini-key-input").value.trim();
-  try {
-    const resp = await fetch(`${API_BASE}/set-gemini-key`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ api_key: key })
-    });
-    if (resp.ok) {
-      closeModal("gemini-modal");
-      showToast("Gemini API key saved & gatekeeper updated! ✨", "success");
-      fetchGatekeeperStatus();
-    }
-  } catch (err) {
-    showToast("Failed to save Gemini key.", "error");
-  }
-}
-
-async function clearGeminiKey() {
-  document.getElementById("gemini-key-input").value = "";
-  await saveGeminiKey();
-}
-
 // ==========================================================================
 // 9. MODAL & UI HELPERS
 // ==========================================================================

@@ -7,7 +7,8 @@ import asyncio
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from backend.app.main import app, health
-from backend.app.api.routes import analyse_job, ocr_status, JobAnalysisRequest
+from backend.app.api.routes import analyse_job, ocr_status, gatekeeper_status, JobAnalysisRequest
+from starlette.testclient import TestClient
 
 async def test_health_endpoint():
     res = await health()
@@ -62,6 +63,28 @@ async def test_analyse_url_ssrf_blocked():
         assert "blocked" in e.detail.lower() or "internal" in e.detail.lower()
         print("  [PASS] test_analyse_url_ssrf_blocked -> Successfully blocked internal IP:", e.detail)
 
+
+async def test_gatekeeper_status_safe():
+    res = await gatekeeper_status()
+    assert "gemini_active" in res
+    assert "mode" in res
+    assert "model" in res
+    assert "vision_supported" in res
+    # Ensure zero key leakage
+    res_str = str(res).lower()
+    assert "api_key" not in res_str
+    assert "aiza" not in res_str
+    print("  [PASS] test_gatekeeper_status_safe -> Gatekeeper status contains no key credentials:", res)
+
+
+def test_set_gemini_key_endpoint_removed():
+    client = TestClient(app)
+    # /set-gemini-key must return 404 since it has been removed
+    resp = client.post("/set-gemini-key", json={"api_key": "dummy_key_123456789"})
+    assert resp.status_code in (404, 405)
+    print("  [PASS] test_set_gemini_key_endpoint_removed -> /set-gemini-key is successfully removed")
+
+
 async def main():
     print("=" * 60)
     print("RUNNING MODULE 5 API ROUTE TESTS")
@@ -71,9 +94,12 @@ async def main():
     await test_analyse_job_endpoint()
     await test_gatekeeper_non_job_api()
     await test_analyse_url_ssrf_blocked()
+    await test_gatekeeper_status_safe()
+    test_set_gemini_key_endpoint_removed()
     print("=" * 60)
     print("ALL MODULE 5 API ROUTE TESTS PASSED SUCCESSFULLY!")
     print("=" * 60)
 
 if __name__ == "__main__":
     asyncio.run(main())
+

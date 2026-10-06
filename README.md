@@ -198,7 +198,6 @@ The application will be accessible at [http://localhost:80/](http://localhost:80
 | `/api/stats` | `GET` | Live community intelligence and blacklisted entity counts |
 | `/api/feedback` | `POST` | Record accuracy feedback (correct, false positive, false negative) |
 | `/gatekeeper-status` | `GET` | Gatekeeper engine status (Offline Heuristic vs Google Gemini Cloud) |
-| `/set-gemini-key` | `POST` | Dynamically configure Gemini API key at runtime |
 | `/health` | `GET` | Operational health check with model metrics and OCR readiness |
 
 ---

@@ -567,21 +567,20 @@
       </div>
       <div class="modal-body">
         <p class="modal-hint">
-          Configure Google Gemini (<code>gemini-2.5-flash</code>) for cloud multimodal screenshot scanning and semantic content classification.
+          Google Gemini (<code>gemini-2.5-flash</code>) provides optional cloud multimodal screenshot scanning and semantic content classification.
         </p>
         <div class="modal-status-box" id="modal-status-box">
           <span class="modal-status-dot" id="modal-status-dot"></span>
           <span id="modal-status-text">Checking status...</span>
         </div>
-        <div class="form-group" style="margin-top: 14px;">
-          <label for="gemini-key-input">Gemini API Key (Optional):</label>
-          <input type="password" id="gemini-key-input" placeholder="AIzaSy..." />
-          <p class="field-hint">If left empty, LeakedIn automatically operates with the zero-config offline heuristic gatekeeper.</p>
+        <div style="margin-top: 14px; font-size: 0.85rem; line-height: 1.5; color: var(--text-muted); background: var(--bg-surface); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <strong style="color: var(--text-main); display: block; margin-bottom: 4px;">⚙️ Environment-Only Configuration</strong>
+          <p style="margin: 0 0 6px 0;">To enable Gemini, set <code>GEMINI_API_KEY=your_key</code> in your local <code>.env</code> file and restart the backend. Keys cannot be submitted via the browser.</p>
+          <p style="margin: 0;">Without a key, LeakedIn runs completely offline using local linguistic heuristics.</p>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary-sm" onclick="clearGeminiKey()">Clear Key</button>
-        <button class="btn-primary-sm" onclick="saveGeminiKey()">Save & Apply</button>
+        <button class="btn-primary-sm" onclick="closeModal('gemini-modal')">Close</button>
       </div>
     </div>
   </div>
