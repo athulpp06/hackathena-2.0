@@ -84,11 +84,34 @@
 ### 2. Calibrated Machine Learning & XAI (`backend/app/detector/ml.py`)
 - **Training Pipeline**: Trained on EMSCAD (17,880 postings) augmented with real-world Indian recruitment scams, calibrated via `CalibratedClassifierCV(method='isotonic', cv=5)`.
 - **Explainable Feature Attribution**: Calculates linear-time feature contributions for top fraud triggers and top legitimacy indicators.
-- **Model Metrics**:
+- **Model & Pipeline Evaluation Metrics (Real Benchmark Output)**:
+
+  #### Isolated Model Evaluation (EMSCAD Holdout Test Split, N=3,576)
+  *Source: `backend/models/metadata.json`*
   - **ROC-AUC**: `0.9901`
   - **Scam Precision**: `95.71%`
   - **Scam Recall**: `77.46%`
   - **Scam F1-Score**: `85.62%`
+
+  #### Comparative Evaluation: ML-Only vs Full Pipeline (60-Sample Benchmark)
+  *Source: Real output from `python backend/scripts/run_benchmark_evaluation.py` (30 Scams, 30 Legitimate)*
+
+  | Metric | ML-Only (Isolated Classifier) | Full Pipeline (Hybrid: Rules + ML) |
+  | :--- | :---: | :---: |
+  | **Scam Recall** | **96.67%** (29 / 30) | **100.00%** (30 / 30) |
+  | **Scam Precision** | **100.00%** | **93.75%** |
+  | **Scam F1-Score** | **0.9831** | **0.9677** |
+  | **Overall Accuracy** | **98.33%** | **96.67%** |
+  | **ROC-AUC Score** | **1.0000** | **1.0000** |
+  | **True Positives (Scams Caught)** | 29 / 30 | 30 / 30 |
+  | **False Negatives (Scams Missed)** | 1 / 30 | 0 / 30 |
+  | **True Negatives (Legitimate Cleared)** | 30 / 30 | 28 / 30 |
+  | **False Positives (Legitimate Flagged)** | 0 / 30 | 2 / 30 |
+  | **Scam Average Risk Score** | — | **87.3 / 100** |
+  | **Legitimate Average Risk Score** | — | **9.0 / 100** |
+  | **Risk Score Separation Delta** | — | **+78.3 points** |
+
+  > **ML False Negative Rescue**: In isolated ML evaluation, sample `SCAM_14` (*Software Engineer Trainee - Infosys Corporate Impersonation*) scored `0.4910` (below the 0.50 threshold because it mimicked corporate phrasing). The multi-layered rules engine intercepted the sample with **79/100 (High Risk)** via *Upfront Fee / Registration Charge*, *Courier fee demand*, and *Free Webmail corporate impersonation*, achieving **100.00% End-to-End Scam Recall**.
 
 ### 3. Multilingual Heuristics & Normalizer (`backend/app/detector/rules.py`)
 - **Unicode & Leetspeak Normalizer**: Strips zero-width characters, Cyrillic homoglyphs, and converts obfuscated numbers (`ph0ne`, `₹5,OOO`) while mapping exact character offsets back to the raw string.
@@ -261,10 +284,9 @@ docker-compose up --build
 │   ├── models/
 │   │   ├── job_detector_model.joblib # Trained calibrated pipeline
 │   │   └── metadata.json             # Calibration metrics & version info
-│   ├── scripts/
-│   │   ├── train_pipeline.py         # Calibrated classifier training pipeline
-│   │   └── run_benchmark_evaluation.py # Ground-truth benchmark evaluation
-│   └── tests/                        # 87 Automated phase & robustness tests
+│   └── scripts/
+│       ├── train_pipeline.py         # Calibrated classifier training pipeline
+│       └── run_benchmark_evaluation.py # Ground-truth benchmark evaluation
 ├── bots/
 │   └── telegram_bot.py               # Interactive Telegram scanner bot
 ├── docker/
@@ -275,7 +297,7 @@ docker-compose up --build
 │   ├── index.html                    # Unified UI layout with 4 tabs & modals
 │   ├── styles.css                    # Luxury dark-mode CSS design system
 │   └── app.js                        # Client logic, i18n, and Canvas PNG exporter
-├── tests/                            # 14 Root module tests
+├── tests/                            # 113 Automated test suites (consolidated)
 ├── .env.example                      # Environment variables template
 ├── .gitignore                        # Git exclusion rules (2.0/ excluded)
 ├── Dockerfile                        # Production container build
