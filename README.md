@@ -155,21 +155,43 @@ backend/tests/test_robustness_cases.py .... [PASS]
 - Windows PowerShell, macOS Terminal, or Linux Bash
 
 ### 2. Local Installation
-```powershell
+
+```bash
 # 1. Clone repository
 git clone https://github.com/athulpp06/hackathena-2.0.git
-cd "20261005 Hackathena 2.0"
+cd hackathena-2.0
+```
 
+#### Windows (PowerShell):
+```powershell
 # 2. Setup Virtual Environment
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1    # On Linux/macOS: source .venv/bin/activate
+.\.venv\Scripts\Activate.ps1
 
-# 3. Install Dependencies
+# 3. Environment Configuration (Optional)
+copy .env.example .env
+
+# 4. Install Dependencies
+pip install -r requirements.txt
+```
+
+#### Linux / macOS (Bash / Zsh):
+```bash
+# 2. Setup Virtual Environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# 3. Environment Configuration (Optional)
+cp .env.example .env
+
+# 4. Install Dependencies
 pip install -r requirements.txt
 ```
 
 ### 3. Start the Server
-```powershell
+
+```bash
+# Start backend API and frontend static server
 uvicorn backend.app.main:app --reload --port 8000
 ```
 
@@ -178,10 +200,14 @@ uvicorn backend.app.main:app --reload --port 8000
 - **Health Check**: [http://localhost:8000/health](http://localhost:8000/health)
 
 ### 4. Running via Docker
-```powershell
+
+```bash
+# Build and run backend + Nginx frontend
 docker-compose up --build
 ```
-The application will be accessible at [http://localhost:80/](http://localhost:80/) behind the included Nginx reverse proxy.
+
+- **Frontend Web UI**: [http://localhost:5500/](http://localhost:5500/) (served via Nginx)
+- **Backend API & Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
